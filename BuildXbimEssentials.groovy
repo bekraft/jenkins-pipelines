@@ -4,10 +4,14 @@ import java.text.SimpleDateFormat
 // based on azure-pipelines.yml configuration (https://github.com/xBimTeam/XbimEssentials/blob/master/azure-pipelines.yml)
 
 // Parameters:
-// - doCleanUpWs
-// - params.localNugetStore
-// - xbimRepository
-// - xbimBranch
+// - doCleanUpWs (boolean)
+// - localNugetStore (local path)
+// - xbimRepository (URL)
+// - xbimBranch (name)
+
+// - buildConfig (Release, Debug)
+// - buildMajor (int)
+// - buildMinor (int)
 
 node {
    def buildDate = Calendar.getInstance()
