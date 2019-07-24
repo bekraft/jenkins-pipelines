@@ -1,7 +1,7 @@
 // Xbim.Stages.groovy
 import java.text.SimpleDateFormat
 
-def generatePackageVersion(majorVersion,minorVersion,buildTime = null) {
+def generateBuildVersion(majorVersion,minorVersion,buildTime = null) {
    def buildDate = Calendar.getInstance()
    if(buildTime) {
         buildDate.setTime(buildTime)
@@ -13,9 +13,12 @@ def generatePackageVersion(majorVersion,minorVersion,buildTime = null) {
        major: "${majorVersion}",
        minor: "${minorVersion}",
        release: new SimpleDateFormat("yyMM").format(buildDate.getTime()),
-       build: "${buildDate.get(Calendar.DAY_OF_MONTH)}${buildNo}",
-       version: "${majorVersion}.${minorVersion}.${release}.${build}"
+       build: "${buildDate.get(Calendar.DAY_OF_MONTH)}${buildNo}"
    ]
+}
+
+def generaterPackageVersion(buildVersion) {
+    return "${buildVersion.major}.${buildVersion.minor}.${buildVersion.release}.${buildVersion.build}"
 }
 
 return this

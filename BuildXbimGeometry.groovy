@@ -14,8 +14,9 @@
 node {
    checkout scm
    def XbimStages = load "Xbim.Stages.groovy"
-   def build = XbimStages.generatePackageVersion(5,1,new Date())
-   println("Building package version ${build.version}")
+   def buildVersion = XbimStages.generateBuildVersion(5,1,new Date())
+   def packageVersion = XbimStages.generaterPackageVersion(buildVersion)
+   println("Building package version ${packageVersion}")
    
    def builtNugets = "${WORKSPACE}/nupkgs"
    def nugetBin = "${WORKSPACE}/nuget.exe"
