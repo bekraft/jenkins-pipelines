@@ -1,8 +1,11 @@
 import java.text.SimpleDateFormat
 
+// Xbim.Essentials Build
+// based on azure-pipelines.yml configuration (https://github.com/xBimTeam/XbimEssentials/blob/master/azure-pipelines.yml)
+
 // Parameters:
 // - doCleanUpWs
-// - localNugetStore
+// - params.localNugetStore
 // - xbimRepository
 // - xbimBranch
 
@@ -25,7 +28,7 @@ node {
    }
    
    stage('Git Checkout') { // for display purposes
-      git branch: "${xbimBranch}", url: "${xbimRepository}" 
+      git branch: "${params.xbimBranch}", url: "${params.xbimRepository}" 
    }
    
    stage('Preparation') {
@@ -63,11 +66,11 @@ node {
    
    stage('Locally publishing') {
       println('Congratulation! All binaries have been built!')
-      println("Publishing to ${localNugetStore}")
+      println("Publishing to ${params.localNugetStore}")
       
       findFiles(glob:"**/*.nupkg").each { f ->
          println("Adding ${f}")
-         powershell "${nugetBin} add ${WORKSPACE}/${f} -Source ${localNugetStore} -Verbosity detailed"
+         powershell "${nugetBin} add ${WORKSPACE}/${f} -Source ${params.localNugetStore} -Verbosity detailed"
       }
    }
 }
