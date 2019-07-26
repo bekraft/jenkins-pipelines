@@ -14,12 +14,10 @@ import java.text.SimpleDateFormat
 // - buildMinor (int)
 
 node {
-   def buildDate = Calendar.getInstance()
-   def releaseVersion = new SimpleDateFormat("yyMM").format(buildDate.getTime())
-   def build = (int)((buildDate.get(Calendar.HOUR_OF_DAY)*60 + buildDate.get(Calendar.MINUTE))/2)
-   def buildVersion = "${buildDate.get(Calendar.DAY_OF_MONTH)}${build}"
-
-   def packageVersion="5.1.${releaseVersion}.${buildVersion}"
+   checkout scm
+   def XbimStages = load "Xbim.Stages.groovy"
+   def buildVersion = XbimStages.generateBuildVersion(params.buildMajor,params.buildMinor,new Date())
+   def packageVersion = XbimStages.generaterPackageVersion(buildVersion)
    println("Building package version ${packageVersion}")
    
    def builtNugets = "${WORKSPACE}/nupkgs"

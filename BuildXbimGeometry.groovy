@@ -3,6 +3,7 @@
 
 // Parameters:
 // - doCleanUpWs (boolean)
+// - doUpdatePackages (boolean)
 // - localNugetStore (local path)
 // - xbimRepository (URL)
 // - xbimBranch (name)
@@ -32,11 +33,16 @@ node {
    }
    
    stage('Preparation') {
-      powershell 'Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -OutFile nuget.exe -Verbose'
-      powershell "${nugetBin} sources list"
+      XbimStages.nuget('sources list')
+      XbimStages.nuget('restore Xbim.Geometry.Engine.sln')
+      if(params.doUpdatePackages) {
+          XbimStages.nuget('update')
+      }
+      // TODO Replace versions 
    }
 
    stage('Build') {
-       
+       // Build Engine
+       XbimStages.msbuild('Xbim.Geometry.Engine.sln /t:build')
    }
 }

@@ -21,4 +21,17 @@ def generaterPackageVersion(buildVersion) {
     return "${buildVersion.major}.${buildVersion.minor}.${buildVersion.release}.${buildVersion.build}"
 }
 
+def nuget(command) {
+    if(!fileExists("${WORKSPACE}/nuget.exe")) {
+        dir('./.') {
+            powershell 'Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -OutFile nuget.exe -Verbose'
+        }
+    }
+    return powershell(returnStatus: true, script: "${WORKSPACE}/nuget.exe ${command}")    
+}
+
+def msbuild(command) {
+    return bat(returnStatus: true, script: "\"${tool 'MSBuild'}\" ${command}")
+}
+
 return this
