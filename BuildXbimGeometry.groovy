@@ -16,7 +16,7 @@
 node {
    checkout scm
    def XbimStages = load "Xbim.Stages.groovy"
-   def buildTime = params.buildIdentifier.trim.empty ? new Date() : params.buildIdentifier
+   def buildTime = params.buildIdentifier.empty ? new Date() : params.buildIdentifier
    def buildVersion = XbimStages.generateBuildVersion(params.buildMajor, params.buildMinor, buildTime)
    def packageVersion = XbimStages.generaterPackageVersion(buildVersion)
    echo "Building package version ${packageVersion}"
