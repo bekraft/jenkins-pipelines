@@ -38,7 +38,7 @@ node {
           XbimStages.nuget('update')
       }
       // Replace versions
-      powershell "((Get-Content -path Xbim.Geometry.Engine\\app.rc -Raw) -replace '"FileVersion", "5.1.0.0"','"FileVersion", "${packageVersion}"') | Set-Content -Path Xbim.Geometry.Engine\\app.rc" 
+      powershell "((Get-Content -path Xbim.Geometry.Engine\\app.rc -Raw) -replace '\"FileVersion\", \"5.1.0.0\"','\"FileVersion\", \"${packageVersion}\"') | Set-Content -Path Xbim.Geometry.Engine\\app.rc" 
       powershell "((Get-Content -path Xbim.Geometry.Engine\\app.rc -Raw) -replace 'FILEVERSION 5,1,0,0','FILEVERSION ${buildVersion.major},${buildVersion.minor},${buildVersion.release},${buildVersion.build}') | Set-Content -Path Xbim.Geometry.Engine\\app.rc" 
    }
 
