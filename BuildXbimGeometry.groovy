@@ -10,7 +10,6 @@
 // - buildConfig (Release, Debug)
 // - buildMajor (int)
 // - buildMinor (int)
-
 // - buildIdentifier (string or empty)
 
 node {
