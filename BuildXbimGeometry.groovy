@@ -31,23 +31,31 @@ node {
    }
    
    stage('Preparation') {
+      // Clean up
+      XbimStages.cleanUpNupkgs()
+      // Restore & update
       XbimStages.nuget('sources list')
       XbimStages.nuget('restore Xbim.Geometry.Engine.sln')
       if(params.doUpdatePackages) {
           XbimStages.addLocalNugetCache(params.localNugetStore)
-          XbimStages.nuget('update')
+          XbimStages.nuget("config -set repositoryPath=${params.localNugetStore}")
+          XbimStages.nuget('update ./Xbim.Geometry.Engine.sln')
       }
+
+      powershell 'dotnet add ./Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj package Xbim.Tessellator'
+
       // Replace versions
       powershell "((Get-Content -path Xbim.Geometry.Engine\\app.rc -Raw) -replace '\"FileVersion\", \"5.1.0.0\"','\"FileVersion\", \"${packageVersion}\"') | Set-Content -Path Xbim.Geometry.Engine\\app.rc" 
       powershell "((Get-Content -path Xbim.Geometry.Engine\\app.rc -Raw) -replace 'FILEVERSION 5,1,0,0','FILEVERSION ${buildVersion.major},${buildVersion.minor},${buildVersion.release},${buildVersion.build}') | Set-Content -Path Xbim.Geometry.Engine\\app.rc" 
-      // Clean up
-      XbimStages.cleanUpNupkgs()
    }
 
    stage('Build') {
-       // Build Engine for x86 and x64 mode
-       XbimStages.msbuild("./Xbim.Geometry.Engine.sln /t:build /p:Configuration=${params.buildConfig} /p:Platform=x64")
-       XbimStages.msbuild("./Xbim.Geometry.Engine.sln /t:build /p:Configuration=${params.buildConfig} /p:Platform=x86")
+       // Try build 2 times; it will likely report errors 1st time, but seem to be needed for the succes of the 2nd build
+       for(platform in ['x86','x64']) {
+          for(target in ['clean', 'build', 'build']) {
+             XbimStages.msbuild("./Xbim.Geometry.Engine.sln /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")
+          }
+       }
        // Pack nuget packages
        powershell "dotnet pack Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj -c ${params.buildConfig} -o ${params.buildConfig} /p:PackageVersion=${packageVersion}"
        powershell "dotnet pack Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj -c ${params.buildConfig} -o ${params.buildConfig} /p:PackageVersion=${packageVersion}"
