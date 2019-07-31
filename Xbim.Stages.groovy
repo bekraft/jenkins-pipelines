@@ -78,19 +78,22 @@ def updatePackages(packageIdentifiers, regexPackageId = '.*') {
     // Visit all project files
     findFiles(glob:'**/*.*proj').each { f ->
         def contents = readFile "${f}"
-        def matcher = pckgPattern.matcher(contents)
+        def pckgMatcher = pckgPattern.matcher(contents)
         echo " Found project file [${f}]:"
-        while(matcher.find()) {
-            def id = matcher.group(1)            
-            if(idSet.contains(id) || idPattern.matcher(id).matches()) {
-                def version = matcher.group(2)
+        while(pckgMatcher.find()) {
+            def id = pckgMatcher.group(1) 
+            def idMatcher = idPattern.matcher(id)
+            if(idSet.contains(id) || idMatcher.matches()) {
+                def version = pckgMatcher.group(2)
                 echo " - matching package ${id} (${version.empty ? 'latest' : version})"
                 if(!version.empty) {
                     // Only if a given version exists
                     powershell "dotnet add ${f} package ${id}"
                 }
             }
+            idMatcher = null
         }
+        pckgMatcher = null
     }
     echo 'Finalized package updates...'
 }
