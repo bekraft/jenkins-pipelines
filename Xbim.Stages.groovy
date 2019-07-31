@@ -64,6 +64,7 @@ def addLocalNugetCache(nugetCachePath) {
 }
 
 // See https://gist.github.com/JonCanning/a083e80c53eb68fac32fe1bfe8e63c48
+@NonCPS
 def updatePackages(packageIdentifiers, regexPackageId = '.*') {
     echo "Start package updates using ${packageIdentifiers} and matching expression [${regexPackageId}]"
     def idset = packageIdentifiers.toSet()
@@ -72,6 +73,7 @@ def updatePackages(packageIdentifiers, regexPackageId = '.*') {
     findFiles(glob:'**/*.*proj').each { f ->
         def packages = readFile("${f}") =~ 'PackageReference Include="([^"]*)" Version="([^"]*)"'        
         echo "Found project [${f}] with ${packages.count == 0? 'no': packages.count} matches."
+        echo "${packages}"
         packages.each { pkg ->
             def idmatches = (pkg[1] =~ regexPackageId)
             if(idset.contains(pkg[1]) || idmatches.count > 0) {
@@ -80,8 +82,10 @@ def updatePackages(packageIdentifiers, regexPackageId = '.*') {
                     // Only if a given version exists
                     powershell "dotnet add ${f} package ${pkg[1]}"
                 }
-            }            
+            }
+            idmatches = null
         }
+        packages = null
     }
     echo 'Finalized package updates.'
 }
