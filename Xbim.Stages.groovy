@@ -70,12 +70,12 @@ def updatePackages(packageIdentifiers, regexPackageId = '.*') {
 
     // Visit all project files
     findFiles(glob:'**/*.*proj').each { f ->
-        def packages = readFile(f) =~ 'PackageReference Include="([^"]*)" Version="([^"]*)"'
-        def idmatches = (pkg[1] =~ regexPackageId)
-
+        def packages = readFile("${f}") =~ 'PackageReference Include="([^"]*)" Version="([^"]*)"'        
+        echo "Found project [${f}] with ${packages.count == 0? 'no': packages.count} matches."
         packages.each { pkg ->
+            def idmatches = (pkg[1] =~ regexPackageId)
             if(idset.contains(pkg[1]) || idmatches.count > 0) {
-                echo "Found [${f}] with package ${pkg[1]} (${pkg[2].empty ? 'latest' : pkg[2]})"
+                echo "- [${f}] with package ${pkg[1]} (${pkg[2].empty ? 'latest' : pkg[2]})"
                 if(!pkg[2].empty) {
                     // Only if a given version exists
                     powershell "dotnet add ${f} package ${pkg[1]}"
