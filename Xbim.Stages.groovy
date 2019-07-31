@@ -1,6 +1,5 @@
 // Xbim.Stages.groovy
 import java.text.SimpleDateFormat
-import java.util.regex.Pattern
 
 def generateBuildVersion(majorVersion, minorVersion, buildTime = null) {   
    def buildClassifier
@@ -38,19 +37,19 @@ def msbuild(command) {
     return bat(returnStatus: true, script: "\"${tool 'MSBuild'}\" ${command}")
 }
 
-def cleanUpNupkgs(rootPath = '.') {
-      findFiles(glob:"${rootPath}/**/*.nupkg").each { f ->
+def cleanUpNupkgs() {
+      findFiles(glob:'**/*.nupkg').each { f ->
          if(0 != powershell(returnStatus: true, script: "rm ${WORKSPACE}/${f}")) {
-             echo "Could not remove ${f} from workspace"
+             echo "! Could not remove [${f}] from workspace !"
          }
       }
 }
 
-def deployLocally(nugetCachePath, rootPath = '.') {
-      echo "Deploying Nupkgs to ${params.localNugetStore}"
+def deployLocally(nugetCachePath) {
+      echo "Deploying Nupkgs to ${params.localNugetStore} ..."
       
-      findFiles(glob:"${rootPath}/**/*.nupkg").each { f ->
-         echo "Found ${f}"
+      findFiles(glob:'**/*.nupkg').each { f ->
+         echo " Found pre-built package [${f}]"
          XbimStages.nuget("add ${WORKSPACE}/${f} -Source ${nugetCachePath} -Verbosity detailed")
       }
 }
@@ -64,7 +63,6 @@ def addLocalNugetCache(nugetCachePath) {
 }
 
 // See https://gist.github.com/JonCanning/a083e80c53eb68fac32fe1bfe8e63c48
-@NonCPS
 def updatePackages(packageIdentifiers, regexPackageId = '.*') {
     echo "Start package updates using ${packageIdentifiers} and matching expression [${regexPackageId}]"
     def idset = packageIdentifiers.toSet()
@@ -73,7 +71,6 @@ def updatePackages(packageIdentifiers, regexPackageId = '.*') {
     findFiles(glob:'**/*.*proj').each { f ->
         def packages = readFile("${f}") =~ 'PackageReference Include="([^"]*)" Version="([^"]*)"'        
         echo "Found project [${f}] with ${packages.count == 0? 'no': packages.count} matches."
-        echo "${packages}"
         packages.each { pkg ->
             def idmatches = (pkg[1] =~ regexPackageId)
             if(idset.contains(pkg[1]) || idmatches.count > 0) {
@@ -83,9 +80,9 @@ def updatePackages(packageIdentifiers, regexPackageId = '.*') {
                     powershell "dotnet add ${f} package ${pkg[1]}"
                 }
             }
-            idmatches = null
+            idmatches=null
         }
-        packages = null
+        packages=null
     }
     echo 'Finalized package updates.'
 }
