@@ -1,5 +1,6 @@
 // Xbim.Stages.groovy
 import java.text.SimpleDateFormat
+import java.util.regex.Pattern
 
 def generateBuildVersion(majorVersion, minorVersion, buildTime = null) {   
    def buildClassifier
@@ -60,6 +61,38 @@ def addLocalNugetCache(nugetCachePath) {
             error "Could not add ${nugetCachePath} to nuget repository configuration!"
         }
     }
+}
+
+// See https://gist.github.com/JonCanning/a083e80c53eb68fac32fe1bfe8e63c48
+def updatePackages(packageIdentifiers, regexPackageId = '.*') {
+    echo 'Start package updates...'
+    packageIdentifiers.each { s -> 
+        echo "- ${s}" 
+    }
+    echo " matching expression [${regexPackageId}]"
+
+    def pckgPattern = Pattern.compile('PackageReference Include="([^"]*)" Version="([^"]*)"')
+    def idPattern = Pattern.compile(regexPackageId, Pattern.DOTALL)
+    def idSet = packageIdentifiers.toSet()
+
+    // Visit all project files
+    findFiles(glob:'**/*.*proj').each { f ->
+        def contents = readFile "${f}"
+        def matcher = pckgPattern.matcher(contents)
+        echo " Found project file [${f}]:"
+        while(matcher.find()) {
+            def id = matcher.group(1)            
+            if(idSet.contains(id) || idPattern.matcher(id).matches()) {
+                def version = matcher.group(2)
+                echo " - matching package ${id} (${version.empty ? 'latest' : version})"
+                if(!version.empty) {
+                    // Only if a given version exists
+                    powershell "dotnet add ${f} package ${id}"
+                }
+            }
+        }
+    }
+    echo 'Finalized package updates...'
 }
 
 return this

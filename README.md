@@ -4,6 +4,12 @@ Jenkins Pipelines
 
 ## Xbim Pipes
 
+Prerequisites of Jenkins
+- Pipeline (Groovy)
+- Pipeline Utility Steps
+- MSBuild Plugin 
+- PowerShell Plugin
+
 ### BuildXbimEssentials 
 
 Packs and locally publishes modular essential packages

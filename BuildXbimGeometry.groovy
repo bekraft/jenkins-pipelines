@@ -12,6 +12,8 @@
 // - buildMinor (int)
 // - buildIdentifier (string or empty)
 
+// - doCleanBuild
+
 node {
    checkout scm
    def XbimStages = load "Xbim.Stages.groovy"
@@ -31,28 +33,34 @@ node {
    }
    
    stage('Preparation') {
-      // Clean up
+      // Clean up old binary packages
       XbimStages.cleanUpNupkgs()
-      // Restore & update
+      // Restore & update via nuget
+      XbimStages.addLocalNugetCache(params.localNugetStore)
+      XbimStages.nuget("config -set repositoryPath=${params.localNugetStore}")
       XbimStages.nuget('sources list')
       XbimStages.nuget('restore Xbim.Geometry.Engine.sln')
+
       if(params.doUpdatePackages) {
-          XbimStages.addLocalNugetCache(params.localNugetStore)
-          XbimStages.nuget("config -set repositoryPath=${params.localNugetStore}")
+          // Update all packages
           XbimStages.nuget('update ./Xbim.Geometry.Engine.sln')
       }
 
-      powershell 'dotnet add ./Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj package Xbim.Tessellator'
+      // Update Xbim packages (Xbim.Ifc, Xbim.Tesselator, ...?)
+      XbimStages.updatePackages([], '^(Xbim).*')
 
-      // Replace versions
+      // Restore entire solution dependencies
+      XbimStages.msbuild('./Xbim.Geometry.Engine.sln /t:restore')
+
+      // Replace versions native engine version identifiers
       powershell "((Get-Content -path Xbim.Geometry.Engine\\app.rc -Raw) -replace '\"FileVersion\", \"5.1.0.0\"','\"FileVersion\", \"${packageVersion}\"') | Set-Content -Path Xbim.Geometry.Engine\\app.rc" 
       powershell "((Get-Content -path Xbim.Geometry.Engine\\app.rc -Raw) -replace 'FILEVERSION 5,1,0,0','FILEVERSION ${buildVersion.major},${buildVersion.minor},${buildVersion.release},${buildVersion.build}') | Set-Content -Path Xbim.Geometry.Engine\\app.rc" 
    }
 
    stage('Build') {
-       // Try build 2 times; it will likely report errors 1st time, but seem to be needed for the succes of the 2nd build
+       // Build for both platforms
        for(platform in ['x86','x64']) {
-          for(target in ['clean', 'build', 'build']) {
+          for(target in ['clean', 'build']) {
              XbimStages.msbuild("./Xbim.Geometry.Engine.sln /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")
           }
        }
