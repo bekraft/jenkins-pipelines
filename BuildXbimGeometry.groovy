@@ -11,7 +11,6 @@
 // - buildMajor (int)
 // - buildMinor (int)
 // - buildIdentifier (string or empty)
-
 // - doCleanBuild
 
 node {
@@ -53,14 +52,14 @@ node {
       XbimStages.msbuild('./Xbim.Geometry.Engine.sln /t:restore')
 
       // Replace versions native engine version identifiers
-      powershell "((Get-Content -path Xbim.Geometry.Engine\\app.rc -Raw) -replace '\"FileVersion\", \"5.1.0.0\"','\"FileVersion\", \"${packageVersion}\"') | Set-Content -Path Xbim.Geometry.Engine\\app.rc" 
-      powershell "((Get-Content -path Xbim.Geometry.Engine\\app.rc -Raw) -replace 'FILEVERSION 5,1,0,0','FILEVERSION ${buildVersion.major},${buildVersion.minor},${buildVersion.release},${buildVersion.build}') | Set-Content -Path Xbim.Geometry.Engine\\app.rc" 
+      powershell "((Get-Content -path Xbim.Geometry.Engine\\app.rc -Raw) -replace '\"FileVersion\", \"${buildVersion.major}.${buildVersion.minor}.0.0\"','\"FileVersion\", \"${packageVersion}\"') | Set-Content -Path Xbim.Geometry.Engine\\app.rc" 
+      powershell "((Get-Content -path Xbim.Geometry.Engine\\app.rc -Raw) -replace 'FILEVERSION ${buildVersion.major},${buildVersion.minor},0,0','FILEVERSION ${buildVersion.major},${buildVersion.minor},${buildVersion.release},${buildVersion.build}') | Set-Content -Path Xbim.Geometry.Engine\\app.rc" 
    }
 
    stage('Build') {
        // Build for both platforms
        for(platform in ['x86','x64']) {
-          for(target in ['clean', 'build']) {
+          for(target in (params.doCleanBuild ? ['clean', 'build'] : ['build'])) {
              XbimStages.msbuild("./Xbim.Geometry.Engine.sln /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")
           }
        }
