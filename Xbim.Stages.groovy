@@ -65,37 +65,25 @@ def addLocalNugetCache(nugetCachePath) {
 
 // See https://gist.github.com/JonCanning/a083e80c53eb68fac32fe1bfe8e63c48
 def updatePackages(packageIdentifiers, regexPackageId = '.*') {
-    echo 'Start package updates...'
-    packageIdentifiers.each { s -> 
-        echo "- ${s}" 
-    }
-    echo " matching expression [${regexPackageId}]"
-
-    def pckgPattern = Pattern.compile('PackageReference Include="([^"]*)" Version="([^"]*)"')
-    def idPattern = Pattern.compile(regexPackageId, Pattern.DOTALL)
-    def idSet = packageIdentifiers.toSet()
+    echo "Start package updates using ${packageIdentifiers} and matching expression [${regexPackageId}]"
+    def idset = packageIdentifiers.toSet()
 
     // Visit all project files
     findFiles(glob:'**/*.*proj').each { f ->
-        def contents = readFile "${f}"
-        def pckgMatcher = pckgPattern.matcher(contents)
-        echo " Found project file [${f}]:"
-        while(pckgMatcher.find()) {
-            def id = pckgMatcher.group(1) 
-            def idMatcher = idPattern.matcher(id)
-            if(idSet.contains(id) || idMatcher.matches()) {
-                def version = pckgMatcher.group(2)
-                echo " - matching package ${id} (${version.empty ? 'latest' : version})"
-                if(!version.empty) {
+        def packages = readFile(f) =~ 'PackageReference Include="([^"]*)" Version="([^"]*)"'
+        def idmatches = (pkg[1] =~ regexPackageId)
+
+        packages.each { pkg ->
+            if(idset.contains(pkg[1]) || idmatches.count > 0) {
+                echo "Found [${f}] with package ${pkg[1]} (${pkg[2].empty ? 'latest' : pkg[2]})"
+                if(!pkg[2].empty) {
                     // Only if a given version exists
-                    powershell "dotnet add ${f} package ${id}"
+                    powershell "dotnet add ${f} package ${pkg[1]}"
                 }
-                idMatcher = null
             }            
         }
-        pckgMatcher = null
     }
-    echo 'Finalized package updates...'
+    echo 'Finalized package updates.'
 }
 
 return this
