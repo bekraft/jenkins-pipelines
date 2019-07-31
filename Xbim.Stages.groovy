@@ -62,6 +62,19 @@ def addLocalNugetCache(nugetCachePath) {
     }
 }
 
+def readPackageVersion(f) {
+    def packages = readFile("${f}") =~ 'PackageReference Include="([^"]*)" Version="([^"]*)"'
+    def packageVersion = packages.collect {
+        [ 
+            id: it[1], 
+            version: it[2] 
+        ]
+    }
+    // Avoid CPS exception
+    packages = null
+    return packageVersion
+}
+
 // See https://gist.github.com/JonCanning/a083e80c53eb68fac32fe1bfe8e63c48
 def updatePackages(packageIdentifiers, regexPackageId = '.*') {
     echo "Start package updates using ${packageIdentifiers} and matching expression [${regexPackageId}]"
@@ -69,20 +82,22 @@ def updatePackages(packageIdentifiers, regexPackageId = '.*') {
 
     // Visit all project files
     findFiles(glob:'**/*.*proj').each { f ->
-        def packages = readFile("${f}") =~ 'PackageReference Include="([^"]*)" Version="([^"]*)"'        
-        echo "Found project [${f}] with ${packages.count == 0? 'no': packages.count} matches."
+        def packages = readPackageVersion(f)
+        echo "Found project [${f}] having ${packages.size()} reference(s) in total."
         packages.each { pkg ->
-            def idmatches = (pkg[1] =~ regexPackageId)
-            if(idset.contains(pkg[1]) || idmatches.count > 0) {
-                echo "- [${f}] with package ${pkg[1]} (${pkg[2].empty ? 'latest' : pkg[2]})"
-                if(!pkg[2].empty) {
+            // Test ID match
+            def m = (pkg.id =~ regexPackageId)
+            def isIdMatch = m.count > 0
+            // Avoid CPS
+            m = null
+            if(idset.contains(pkg.id) || isIdMatch) {
+                echo "- Found match for package  ${pkg.id} (${pkg.version.empty ? 'latest' : pkg.version})"
+                if(!pkg.version.empty) {
                     // Only if a given version exists
-                    powershell "dotnet add ${f} package ${pkg[1]}"
+                    powershell "dotnet add ${f} package ${pkg.id}"
                 }
             }
-            idmatches=null
         }
-        packages=null
     }
     echo 'Finalized package updates.'
 }
