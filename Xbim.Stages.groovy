@@ -90,8 +90,8 @@ def updatePackages(packageIdentifiers, regexPackageId = '.*') {
                     // Only if a given version exists
                     powershell "dotnet add ${f} package ${id}"
                 }
-            }
-            idMatcher = null
+                idMatcher = null
+            }            
         }
         pckgMatcher = null
     }
