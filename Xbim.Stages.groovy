@@ -50,7 +50,7 @@ def deployLocally(nugetCachePath) {
       
       findFiles(glob:'**/*.nupkg').each { f ->
          echo " Found pre-built package [${f}]"
-         XbimStages.nuget("add ${WORKSPACE}/${f} -Source ${nugetCachePath} -Verbosity detailed")
+         nuget("add ${WORKSPACE}/${f} -Source ${nugetCachePath} -Verbosity detailed")
       }
 }
 

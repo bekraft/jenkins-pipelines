@@ -38,7 +38,6 @@ node {
       XbimStages.addLocalNugetCache(params.localNugetStore)
       XbimStages.nuget("config -set repositoryPath=${params.localNugetStore}")
       XbimStages.nuget('sources list')
-      XbimStages.nuget('restore Xbim.Geometry.Engine.sln')
 
       if(params.doUpdatePackages) {
           // Update all packages
@@ -48,8 +47,9 @@ node {
       // Update Xbim packages (Xbim.Ifc, Xbim.Tesselator, ...?)
       XbimStages.updatePackages([], '^(Xbim).*')
 
-      // Restore entire solution dependencies
-      XbimStages.msbuild('./Xbim.Geometry.Engine.sln /t:restore')
+      // Restore entire solution dependencies invoking nuget and msbuild
+      XbimStages.nuget('restore Xbim.Geometry.Engine.sln')
+      XbimStages.msbuild("./Xbim.Geometry.Engine.sln /t:restore /p:RestoreSources=${params.localNugetStore}")
 
       // Replace versions native engine version identifiers
       powershell "((Get-Content -path Xbim.Geometry.Engine\\app.rc -Raw) -replace '\"FileVersion\", \"${buildVersion.major}.${buildVersion.minor}.0.0\"','\"FileVersion\", \"${packageVersion}\"') | Set-Content -Path Xbim.Geometry.Engine\\app.rc" 
