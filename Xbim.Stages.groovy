@@ -1,27 +1,43 @@
 // Xbim.Stages.groovy
 import java.text.SimpleDateFormat
+import hudson.plugins.git.GitTool
+
+def generateSnapshotVersion(majorVersion, minorVersion) {
+    def shortversion = git('rev-parse --short HEAD')
+    return generateBuildVersion(majorVersion, minorVersion, shortversion)
+}
 
 def generateBuildVersion(majorVersion, minorVersion, buildTime = null) {   
    def buildClassifier
    def buildDate = Calendar.getInstance()
+   def qualifier = ''
    if(buildTime in Date) {        
-        buildDate.setTime(buildTime)
-        def buildNo = (int)((buildDate.get(Calendar.HOUR_OF_DAY)*60 + buildDate.get(Calendar.MINUTE))/2)
-        buildClassifier = "${buildDate.get(Calendar.DAY_OF_MONTH)}${buildNo}"
+       buildDate.setTime(buildTime)
    } else {
-       buildClassifier = "${buildTime}"
+       qualifier = "-${buildTime}"
    }
 
+   def buildNo = (int)((buildDate.get(Calendar.HOUR_OF_DAY)*60 + buildDate.get(Calendar.MINUTE))/2)
+   buildClassifier = "${buildDate.get(Calendar.DAY_OF_MONTH)}${buildNo}"
+   
    return [
        major: "${majorVersion}",
        minor: "${minorVersion}",
-       release: new SimpleDateFormat("yyMM").format(buildDate.getTime()),
+       release: "${new SimpleDateFormat("yyD").format(buildDate.getTime())}${qualifier}",
        build: buildClassifier
    ]
 }
 
-def generaterPackageVersion(buildVersion) {
-    return "${buildVersion.major}.${buildVersion.minor}.${buildVersion.release}.${buildVersion.build}"
+def git(command) {
+    def t = GitTool.getDefaultInstallation()
+    if(null==t) {
+        error 'Default Git installation missing!'
+    }
+    return bat(returnStdout:true, "${t.getGitExe()} ${command}")
+}
+
+def generaterPackageVersion(v) {
+    return "${v.major}.${v.minor}.${v.release}${null==v.build || v.build.empty? '' : ".${v.build}"}"
 }
 
 def nuget(command) {
