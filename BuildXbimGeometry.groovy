@@ -16,8 +16,7 @@
 node {
    checkout scm
    def XbimStages = load "Xbim.Stages.groovy"
-   def buildTime = params.buildIdentifier.empty ? new Date() : params.buildIdentifier
-   def buildVersion = XbimStages.generateBuildVersion(params.buildMajor, params.buildMinor, buildTime)
+   def buildVersion = XbimStages.generateBuildVersion(params.buildMajor, params.buildMinor, params.buildIdentifier)
    def packageVersion = XbimStages.generaterPackageVersion(buildVersion)
    echo "Building package version ${packageVersion}"
    
@@ -64,12 +63,12 @@ node {
           }
        }
        // Pack nuget packages
-       powershell "dotnet pack Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj -c ${params.buildConfig} -o ${params.buildConfig} /p:PackageVersion=${packageVersion}"
-       powershell "dotnet pack Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj -c ${params.buildConfig} -o ${params.buildConfig} /p:PackageVersion=${packageVersion}"
+       powershell "dotnet pack Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj -c ${params.buildConfig} -o ${params.localNugetStore} /p:PackageVersion=${packageVersion}"
+       powershell "dotnet pack Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj -c ${params.buildConfig} -o ${params.localNugetStore} /p:PackageVersion=${packageVersion}"
    }
 
    stage('Locally publishing') {
       echo 'Congratulation! All binaries have been built!'
-      XbimStages.deployLocally(params.localNugetStore)
+      //XbimStages.deployLocally(params.localNugetStore)
    }
 }

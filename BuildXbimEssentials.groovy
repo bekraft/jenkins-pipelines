@@ -16,8 +16,7 @@ import java.text.SimpleDateFormat
 node {
    checkout scm
    def XbimStages = load "Xbim.Stages.groovy"   
-   def buildTime = params.buildIdentifier.empty ? new Date() : params.buildIdentifier
-   def buildVersion = XbimStages.generateBuildVersion(params.buildMajor, params.buildMinor, buildTime)
+   def buildVersion = XbimStages.generateBuildVersion(params.buildMajor, params.buildMinor, params.buildIdentifier)
    def packageVersion = XbimStages.generaterPackageVersion(buildVersion)
    echo "Building package version ${packageVersion}"
    
@@ -37,7 +36,7 @@ node {
    }
    
    stage('Build') {
-      def prebuiltPckgPath = "${WORKSPACE}/${params.buildConfig}"
+      def prebuiltPckgPath = "${params.localNugetStore}"
       powershell "dotnet pack Xbim.Common/Xbim.Common.csproj -c ${params.buildConfig} /p:PackageVersion=${packageVersion} -o ${prebuiltPckgPath}"
       // IFC4
       powershell "dotnet remove Xbim.Ifc4/Xbim.Ifc4.csproj reference ../Xbim.Common/Xbim.Common.csproj"
@@ -67,6 +66,6 @@ node {
    
    stage('Locally publishing') {
       echo 'Congratulation! All binaries have been built!'
-      XbimStages.deployLocally(params.localNugetStore)
+      //XbimStages.deployLocally(params.localNugetStore)
    }
 }
