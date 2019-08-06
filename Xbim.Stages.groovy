@@ -34,7 +34,7 @@ def git(command) {
     if(null==t) {
         error 'Default Git installation missing!'
     }
-    return bat(returnStdout:true, "${t.getGitExe()} ${command}")
+    return bat(returnStdout:true, script:"${t.getGitExe()} ${command}")
 }
 
 def generaterPackageVersion(v) {
