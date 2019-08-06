@@ -10,19 +10,26 @@
 // - buildConfig (Release, Debug)
 // - buildMajor (int)
 // - buildMinor (int)
-// - buildIdentifier (string or empty)
 
 node {
    checkout scm
    def XbimStages = load "Xbim.Stages.groovy"
-   def buildTime = params.buildIdentifier.empty ? new Date() : params.buildIdentifier
-   def buildVersion = XbimStages.generateBuildVersion(params.buildMajor, params.buildMinor, buildTime)
+   def buildVersion 
+   if('Release' == params.buildConfig) {
+      buildVersion = XbimStages.generateBuildVersion(params.buildMajor, params.buildMinor)
+   } else {
+      buildVersion = XbimStages.generateSnapshotVersion(params.buildMajor, params.buildMinor)
+   }
+
    def packageVersion = XbimStages.generaterPackageVersion(buildVersion)
    echo "Building package version ${packageVersion}"
    
    stage('Clean up') {
        if(params.doCleanUpWs) {
          cleanWs()
+       } else {
+         XbimStages.git('reset --hard')
+         XbimStages.git('git clean -fd')
        }
    }
    
@@ -58,11 +65,6 @@ node {
        powershell "dotnet remove XbimXplorer/XbimXplorer.csproj reference ../Xbim.Presentation/Xbim.Presentation.csproj"
        powershell "dotnet add XbimXplorer/XbimXplorer.csproj package Xbim.WindowsUI -s ${prebuiltPckgPath} -v ${packageVersion}"
        powershell "dotnet msbuild XbimXplorer/XbimXplorer.csproj -c ${params.buildConfig} -o ${params.buildConfig} /p:PackageVersion=${packageVersion}"
-   }
-
-   stage('Locally publishing') {
-      echo 'Congratulation! All binaries have been built!'
-      XbimStages.deployLocally(params.localNugetStore)
    }
 
    stage('Archive XbimXplorer') {

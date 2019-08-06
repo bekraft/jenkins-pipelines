@@ -11,18 +11,26 @@ import java.text.SimpleDateFormat
 // - buildConfig (Release, Debug)
 // - buildMajor (int)
 // - buildMinor (int)
-// - buildIdentifier (string or empty)
 
 node {
    checkout scm
-   def XbimStages = load "Xbim.Stages.groovy"   
-   def buildVersion = XbimStages.generateBuildVersion(params.buildMajor, params.buildMinor, params.buildIdentifier)
+   def XbimStages = load "Xbim.Stages.groovy"
+   def buildVersion 
+   if('Release' == params.buildConfig) {
+      buildVersion = XbimStages.generateBuildVersion(params.buildMajor, params.buildMinor)
+   } else {
+      buildVersion = XbimStages.generateSnapshotVersion(params.buildMajor, params.buildMinor)
+   }
+
    def packageVersion = XbimStages.generaterPackageVersion(buildVersion)
    echo "Building package version ${packageVersion}"
    
    stage('Clean up') {
        if(params.doCleanUpWs) {
          cleanWs()
+       } else {
+         XbimStages.git('reset --hard')
+         XbimStages.git('git clean -fd')
        }
    }
    
@@ -62,10 +70,5 @@ node {
       powershell "dotnet remove Xbim.Tessellator/Xbim.Tessellator.csproj reference ../Xbim.Common/Xbim.Common.csproj ../Xbim.Ifc2x3/Xbim.Ifc2x3.csproj ../Xbim.Ifc4/Xbim.Ifc4.csproj"
       powershell "dotnet add Xbim.Tessellator/Xbim.Tessellator.csproj package Xbim.Ifc2x3 -s ${prebuiltPckgPath} -v ${packageVersion}"
       powershell "dotnet pack Xbim.Tessellator/Xbim.Tessellator.csproj -c ${params.buildConfig} /p:PackageVersion=${packageVersion} -o ${prebuiltPckgPath}"
-   }
-   
-   stage('Locally publishing') {
-      echo 'Congratulation! All binaries have been built!'
-      //XbimStages.deployLocally(params.localNugetStore)
    }
 }

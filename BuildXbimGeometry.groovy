@@ -10,19 +10,26 @@
 // - buildConfig (Release, Debug)
 // - buildMajor (int)
 // - buildMinor (int)
-// - buildIdentifier (string or empty)
 // - doCleanBuild
 
 node {
    checkout scm
    def XbimStages = load "Xbim.Stages.groovy"
-   def buildVersion = XbimStages.generateBuildVersion(params.buildMajor, params.buildMinor, params.buildIdentifier)
+   def buildVersion 
+   if('Release' == params.buildConfig) {
+      buildVersion = XbimStages.generateBuildVersion(params.buildMajor, params.buildMinor)
+   } else {
+      buildVersion = XbimStages.generateSnapshotVersion(params.buildMajor, params.buildMinor)
+   }
+
    def packageVersion = XbimStages.generaterPackageVersion(buildVersion)
    echo "Building package version ${packageVersion}"
    
    stage('Clean up') {
        if(params.doCleanUpWs) {
          cleanWs()
+       } else {
+         XbimStages.git('reset --hard')
        }
    }
    
@@ -51,7 +58,7 @@ node {
       XbimStages.msbuild("./Xbim.Geometry.Engine.sln /t:restore /p:RestoreSources=${params.localNugetStore}")
 
       // Replace versions native engine version identifiers
-      powershell "((Get-Content -path Xbim.Geometry.Engine\\app.rc -Raw) -replace '\"FileVersion\", \"${buildVersion.major}.${buildVersion.minor}.0.0\"','\"FileVersion\", \"${packageVersion}\"') | Set-Content -Path Xbim.Geometry.Engine\\app.rc" 
+      powershell "((Get-Content -path Xbim.Geometry.Engine\\app.rc -Raw) -replace '\"FileVersion\", \"${buildVersion.major}.${buildVersion.minor}.0.0\"','\"FileVersion\", \"${buildVersion.major}.${buildVersion.minor}.${buildVersion.release}.${buildVersion.build}\"') | Set-Content -Path Xbim.Geometry.Engine\\app.rc" 
       powershell "((Get-Content -path Xbim.Geometry.Engine\\app.rc -Raw) -replace 'FILEVERSION ${buildVersion.major},${buildVersion.minor},0,0','FILEVERSION ${buildVersion.major},${buildVersion.minor},${buildVersion.release},${buildVersion.build}') | Set-Content -Path Xbim.Geometry.Engine\\app.rc" 
    }
 
@@ -63,12 +70,9 @@ node {
           }
        }
        // Pack nuget packages
+       powershell "dotnet clean Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj -c ${params.buildConfig}"
        powershell "dotnet pack Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj -c ${params.buildConfig} -o ${params.localNugetStore} /p:PackageVersion=${packageVersion}"
+       powershell "dotnet clean Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj -c ${params.buildConfig}"
        powershell "dotnet pack Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj -c ${params.buildConfig} -o ${params.localNugetStore} /p:PackageVersion=${packageVersion}"
-   }
-
-   stage('Locally publishing') {
-      echo 'Congratulation! All binaries have been built!'
-      //XbimStages.deployLocally(params.localNugetStore)
    }
 }

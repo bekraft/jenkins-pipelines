@@ -8,25 +8,24 @@ def generateSnapshotVersion(majorVersion, minorVersion) {
 }
 
 def generateBuildVersion(majorVersion, minorVersion, buildQualifier = null) {   
-   def buildClassifier
    def buildDate = Calendar.getInstance()
-   def qualifier = ''
+   def releaseQualifier = ''
    if(buildQualifier in Date) {        
        buildDate.setTime(buildQualifier)
    } else {
        if(null!=buildQualifier && !buildQualifier.empty) {
-            qualifier = "-${buildQualifier}"
+            releaseQualifier = "-${buildQualifier}"
        }
    }
 
-   def buildNo = (int)((buildDate.get(Calendar.HOUR_OF_DAY)*60 + buildDate.get(Calendar.MINUTE))/2)
-   buildClassifier = "${buildDate.get(Calendar.DAY_OF_MONTH)}${buildNo}"
+   def halfMinutePerDay = (int)((buildDate.get(Calendar.HOUR_OF_DAY)*60 + buildDate.get(Calendar.MINUTE))/2)
    
    return [
        major: "${majorVersion}",
        minor: "${minorVersion}",
-       release: "${new SimpleDateFormat("yyD").format(buildDate.getTime())}${qualifier}",
-       build: buildClassifier
+       release: "${new SimpleDateFormat("yyD").format(buildDate.getTime())}",
+       qualifier: releaseQualifier,
+       build: "${buildDate.get(Calendar.DAY_OF_MONTH)}${halfMinutePerDay}"
    ]
 }
 
@@ -39,6 +38,10 @@ def git(command) {
 }
 
 def generaterPackageVersion(v) {
+    return "${v.major}.${v.minor}.${v.release}${v.qualifier}.${v.build}"
+}
+
+def generaterAssemblyVersion(v) {
     return "${v.major}.${v.minor}.${v.release}.${v.build}"
 }
 
