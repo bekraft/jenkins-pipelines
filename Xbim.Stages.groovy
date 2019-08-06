@@ -7,14 +7,16 @@ def generateSnapshotVersion(majorVersion, minorVersion) {
     return generateBuildVersion(majorVersion, minorVersion, shortversion)
 }
 
-def generateBuildVersion(majorVersion, minorVersion, buildTime = null) {   
+def generateBuildVersion(majorVersion, minorVersion, buildQualifier = null) {   
    def buildClassifier
    def buildDate = Calendar.getInstance()
    def qualifier = ''
-   if(buildTime in Date) {        
-       buildDate.setTime(buildTime)
+   if(buildQualifier in Date) {        
+       buildDate.setTime(buildQualifier)
    } else {
-       qualifier = "-${buildTime}"
+       if(null!=buildQualifier && !buildQualifier.empty) {
+            qualifier = "-${buildQualifier}"
+       }
    }
 
    def buildNo = (int)((buildDate.get(Calendar.HOUR_OF_DAY)*60 + buildDate.get(Calendar.MINUTE))/2)
@@ -37,7 +39,7 @@ def git(command) {
 }
 
 def generaterPackageVersion(v) {
-    return "${v.major}.${v.minor}.${v.release}${null==v.build || v.build.empty? '' : ".${v.build}"}"
+    return "${v.major}.${v.minor}.${v.release}.${v.build}"
 }
 
 def nuget(command) {
