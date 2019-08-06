@@ -29,7 +29,7 @@ node {
          cleanWs()
        } else {
          XbimStages.git('reset --hard')
-         XbimStages.git('git clean -fd')
+         XbimStages.git('clean -fd')
        }
    }
    
