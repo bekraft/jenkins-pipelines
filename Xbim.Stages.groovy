@@ -34,7 +34,7 @@ def git(command) {
     if(null==t) {
         error 'Default Git installation missing!'
     }
-    return powershell(returnStdout:true, script:"${t.getGitExe()} ${command}")
+    return powershell(returnStdout:true, script:"${t.getGitExe()} ${command}").trim()
 }
 
 def generaterPackageVersion(v) {
