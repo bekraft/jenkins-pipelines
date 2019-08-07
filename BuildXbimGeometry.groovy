@@ -24,6 +24,9 @@ node {
 
    def packageVersion = XbimStages.generaterPackageVersion(buildVersion)
    echo "Building package version ${packageVersion}"
+   currentBuild.displayName = "${BUILD_NUMBER} (${packageVersion})"
+
+   def prebuiltPckgPath = "${params.localNugetStore}"
    
    stage('Clean up') {
        if(params.doCleanUpWs) {
@@ -40,6 +43,11 @@ node {
    stage('Preparation') {
       // Clean up old binary packages
       XbimStages.cleanUpNupkgs()
+
+      // Cleaning nupkg builds
+      powershell "dotnet clean Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj --nologo -c ${params.buildConfig}"
+      powershell "dotnet clean Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj --nologo -c ${params.buildConfig}"
+
       // Restore & update via nuget
       XbimStages.addLocalNugetCache(params.localNugetStore)
       XbimStages.nuget("config -set repositoryPath=${params.localNugetStore}")
@@ -69,10 +77,9 @@ node {
              XbimStages.msbuild("./Xbim.Geometry.Engine.sln /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")
           }
        }
+       
        // Pack nuget packages
-       powershell "dotnet clean Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj -c ${params.buildConfig}"
-       powershell "dotnet pack Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj -c ${params.buildConfig} -o ${params.localNugetStore} /p:PackageVersion=${packageVersion}"
-       powershell "dotnet clean Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj -c ${params.buildConfig}"
-       powershell "dotnet pack Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj -c ${params.buildConfig} -o ${params.localNugetStore} /p:PackageVersion=${packageVersion}"
+       powershell "dotnet pack Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj -c ${params.buildConfig} -o ${prebuiltPckgPath} /p:PackageVersion=${packageVersion}"
+       powershell "dotnet pack Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj -c ${params.buildConfig} -o ${prebuiltPckgPath} /p:PackageVersion=${packageVersion}"
    }
 }

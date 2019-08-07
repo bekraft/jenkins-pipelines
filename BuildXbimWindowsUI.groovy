@@ -23,6 +23,7 @@ node {
 
    def packageVersion = XbimStages.generaterPackageVersion(buildVersion)
    echo "Building package version ${packageVersion}"
+   currentBuild.displayName = "${BUILD_NUMBER} (${packageVersion})"
    
    stage('Clean up') {
        if(params.doCleanUpWs) {
@@ -30,7 +31,7 @@ node {
        } else {
          XbimStages.git('reset --hard')
          XbimStages.git('clean -fd')
-       }
+       }       
    }
    
    stage('Git Checkout') { // for display purposes
@@ -40,6 +41,11 @@ node {
    stage('Preparation') {
       // Clean up old binary packages
       XbimStages.cleanUpNupkgs()
+
+      // Cleaning nupkg builds
+      powershell "dotnet clean Xbim.Presentation/Xbim.Presentation.csproj --nologo -c ${params.buildConfig}"
+      powershell "dotnet clean XbimXplorer/XbimXplorer.csproj --nologo -c ${params.buildConfig}"
+
       // Restore & update via nuget
       XbimStages.addLocalNugetCache(params.localNugetStore)
       XbimStages.nuget("config -set repositoryPath=${params.localNugetStore}")
