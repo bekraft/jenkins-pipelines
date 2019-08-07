@@ -24,7 +24,7 @@ node {
 
    def packageVersion = XbimStages.generaterPackageVersion(buildVersion)
    echo "Building package version ${packageVersion}"
-   currentBuild.displayName = "${BUILD_NUMBER} (${packageVersion})"
+   currentBuild.displayName = "#${BUILD_NUMBER} (${packageVersion})"
 
    def prebuiltPckgPath = "${params.localNugetStore}"
    
@@ -46,13 +46,13 @@ node {
       XbimStages.cleanUpNupkgs()
 
       // Cleaning nupkg builds
-      powershell "dotnet clean Xbim.Common/Xbim.Common.csproj --nologo -c ${params.buildConfig}"
-      powershell "dotnet clean Xbim.Ifc4/Xbim.Ifc4.csproj --nologo -c ${params.buildConfig}"
-      powershell "dotnet clean Xbim.Ifc2x3/Xbim.Ifc2x3.csproj --nologo -c ${params.buildConfig}"
-      powershell "dotnet clean Xbim.IO.MemoryModel/Xbim.IO.MemoryModel.csproj --nologo -c ${params.buildConfig}"
-      powershell "dotnet clean Xbim.IO.Esent/Xbim.IO.Esent.csproj --nologo -c ${params.buildConfig}"
-      powershell "dotnet clean Xbim.Ifc/Xbim.Ifc.csproj --nologo -c ${params.buildConfig}"
-      powershell "dotnet clean Xbim.Tessellator/Xbim.Tessellator.csproj --nologo -c ${params.buildConfig}"
+      powershell "dotnet clean Xbim.Common/Xbim.Common.csproj -c ${params.buildConfig}"
+      powershell "dotnet clean Xbim.Ifc4/Xbim.Ifc4.csproj -c ${params.buildConfig}"
+      powershell "dotnet clean Xbim.Ifc2x3/Xbim.Ifc2x3.csproj -c ${params.buildConfig}"
+      powershell "dotnet clean Xbim.IO.MemoryModel/Xbim.IO.MemoryModel.csproj -c ${params.buildConfig}"
+      powershell "dotnet clean Xbim.IO.Esent/Xbim.IO.Esent.csproj -c ${params.buildConfig}"
+      powershell "dotnet clean Xbim.Ifc/Xbim.Ifc.csproj -c ${params.buildConfig}"
+      powershell "dotnet clean Xbim.Tessellator/Xbim.Tessellator.csproj -c ${params.buildConfig}"
    }
    
    stage('Build') {      

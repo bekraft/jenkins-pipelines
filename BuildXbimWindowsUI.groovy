@@ -23,7 +23,7 @@ node {
 
    def packageVersion = XbimStages.generaterPackageVersion(buildVersion)
    echo "Building package version ${packageVersion}"
-   currentBuild.displayName = "${BUILD_NUMBER} (${packageVersion})"
+   currentBuild.displayName = "#${BUILD_NUMBER} (${packageVersion})"
    
    stage('Clean up') {
        if(params.doCleanUpWs) {
@@ -43,8 +43,8 @@ node {
       XbimStages.cleanUpNupkgs()
 
       // Cleaning nupkg builds
-      powershell "dotnet clean Xbim.Presentation/Xbim.Presentation.csproj --nologo -c ${params.buildConfig}"
-      powershell "dotnet clean XbimXplorer/XbimXplorer.csproj --nologo -c ${params.buildConfig}"
+      powershell "dotnet clean Xbim.Presentation/Xbim.Presentation.csproj -c ${params.buildConfig}"
+      powershell "dotnet clean XbimXplorer/XbimXplorer.csproj -c ${params.buildConfig}"
 
       // Restore & update via nuget
       XbimStages.addLocalNugetCache(params.localNugetStore)

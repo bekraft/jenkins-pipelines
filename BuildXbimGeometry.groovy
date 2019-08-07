@@ -24,7 +24,7 @@ node {
 
    def packageVersion = XbimStages.generaterPackageVersion(buildVersion)
    echo "Building package version ${packageVersion}"
-   currentBuild.displayName = "${BUILD_NUMBER} (${packageVersion})"
+   currentBuild.displayName = "#${BUILD_NUMBER} (${packageVersion})"
 
    def prebuiltPckgPath = "${params.localNugetStore}"
    
@@ -45,8 +45,8 @@ node {
       XbimStages.cleanUpNupkgs()
 
       // Cleaning nupkg builds
-      powershell "dotnet clean Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj --nologo -c ${params.buildConfig}"
-      powershell "dotnet clean Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj --nologo -c ${params.buildConfig}"
+      powershell "dotnet clean Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj -c ${params.buildConfig}"
+      powershell "dotnet clean Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj -c ${params.buildConfig}"
 
       // Restore & update via nuget
       XbimStages.addLocalNugetCache(params.localNugetStore)
