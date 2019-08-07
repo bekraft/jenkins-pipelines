@@ -10,16 +10,17 @@
 // - buildConfig (Release, Debug)
 // - buildMajor (int)
 // - buildMinor (int)
-// - doCleanBuild
+// - doCleanBuild (boolean)
+// - buildPreQualifier (string)
 
 node {
    checkout scm
    def XbimStages = load "Xbim.Stages.groovy"
    def buildVersion 
    if('Release' == params.buildConfig) {
-      buildVersion = XbimStages.generateBuildVersion(params.buildMajor, params.buildMinor)
+      buildVersion = XbimStages.generateBuildVersion(params.buildMajor, params.buildMinor, params.buildPreQualifier)
    } else {
-      buildVersion = XbimStages.generateSnapshotVersion(params.buildMajor, params.buildMinor)
+      buildVersion = XbimStages.generateSnapshotVersion(params.buildMajor, params.buildMinor, params.buildPreQualifier)
    }
 
    def packageVersion = XbimStages.generaterPackageVersion(buildVersion)

@@ -2,9 +2,9 @@
 import java.text.SimpleDateFormat
 import hudson.plugins.git.GitTool
 
-def generateSnapshotVersion(majorVersion, minorVersion) {
+def generateSnapshotVersion(majorVersion, minorVersion, buildQualifier = null) {
     def shortversion = git('rev-parse --short HEAD')
-    return generateBuildVersion(majorVersion, minorVersion, shortversion)
+    return generateBuildVersion(majorVersion, minorVersion, "${null!=buildQualifier? buildQualifier:''}${shortversion}")
 }
 
 def generateBuildVersion(majorVersion, minorVersion, buildQualifier = null) {   
