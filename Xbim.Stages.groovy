@@ -14,7 +14,7 @@ def generateBuildVersion(majorVersion, minorVersion, buildQualifier = null) {
    if(buildQualifier in Date) {        
        buildDate.setTime(buildQualifier)
    } else {
-       if(null!=buildQualifier && !buildQualifier.empty) {
+       if(null!=buildQualifier && buildQualifier.trim()) {
             qualifier = "-${buildQualifier}"
        }
    }
