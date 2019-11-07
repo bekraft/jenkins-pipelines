@@ -64,9 +64,7 @@ node {
 
       // Restore entire solution dependencies invoking nuget and msbuild
       XbimStages.nuget('restore Xbim.Geometry.Engine.sln')
-      XbimStages.msbuild("./Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj /t:restore /p:RestoreSources=${params.localNugetStore}")
-      XbimStages.msbuild("./Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj /t:restore /p:RestoreSources=${params.localNugetStore}")
-      //XbimStages.msbuild("./Xbim.Geometry.Engine.sln /t:restore /p:RestoreSources=${params.localNugetStore}")
+      XbimStages.msbuild("./Xbim.Geometry.Engine.sln /t:restore /p:RestoreSources=${params.localNugetStore}")
 
       // Replace versions native engine version identifiers
       powershell "((Get-Content -path Xbim.Geometry.Engine\\app.rc -Raw) -replace '\"FileVersion\", \"${buildVersion.major}.${buildVersion.minor}.0.0\"','\"FileVersion\", \"${buildVersion.major}.${buildVersion.minor}.${buildVersion.release}.${buildVersion.build}\"') | Set-Content -Path Xbim.Geometry.Engine\\app.rc" 
@@ -77,7 +75,8 @@ node {
        // Build for both platforms
        for(platform in ['x86','x64']) {
           for(target in (params.doCleanBuild ? ['clean', 'build'] : ['build'])) {
-             //XbimStages.msbuild("./Xbim.Geometry.Engine.sln /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")
+             //XbimStages.msbuild("./Xbim.Geometry.Engine.sln /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")             
+             XbimStages.msbuild("./Xbim.Geometry.Engine/Xbim.Geometry.Engine.vcxproj /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")
              XbimStages.msbuild("./Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")
              XbimStages.msbuild("./Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")
           }
