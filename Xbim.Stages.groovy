@@ -76,7 +76,7 @@ def deployLocally(nugetCachePath) {
 }
 
 def removeLocalNugetCache(nugetCachePath) {
-    nuget("sources remove -Name \"localCache\" -Source \"${nugetCachePath}\"")) {
+    nuget("sources remove -Name \"localCache\" -Source \"${nugetCachePath}\"")
 }
     
 def disableLocalNugetCache() {
