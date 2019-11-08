@@ -75,9 +75,21 @@ def deployLocally(nugetCachePath) {
       }
 }
 
+def removeLocalNugetCache(nugetCachePath) {
+    nuget("sources remove -Name \"localCache\" -Source \"${nugetCachePath}\"")) {
+}
+    
+def disableLocalNugetCache() {
+    nuget("sources disable -Name \"localCache\"")
+}
+    
+def enableLocalNugetCache() {
+    nuget("sources enable -Name \"localCache\"")
+}
+
 def addLocalNugetCache(nugetCachePath) {
-    if(0 != nuget("sources update -Name localCache -Source \"${nugetCachePath}\"")) {
-        if(0 != nuget("sources add -Name localCache -Source \"${nugetCachePath}\"")) {
+    if(0 != nuget("sources update -Name \"localCache\" -Source \"${nugetCachePath}\"")) {
+        if(0 != nuget("sources add -Name \"localCache\" -Source \"${nugetCachePath}\"")) {
             error "Could not add ${nugetCachePath} to nuget repository configuration!"
         }
     }
