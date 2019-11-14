@@ -12,6 +12,7 @@ import java.text.SimpleDateFormat
 // - buildMajor (int)
 // - buildMinor (int)
 // - buildPreQualifier (string)
+// - useLocalArtifacts (boolean)
 
 node {
    checkout scm
@@ -42,9 +43,17 @@ node {
       git branch: "${params.xbimBranch}", url: "${params.xbimRepository}" 
    }
    
-   stage('Preparation') {
-      XbimStages.nuget('sources list')
+   stage('Preparation') {      
       XbimStages.cleanUpNupkgs()
+      
+      // Restore & update via nuget
+      XbimStages.addLocalNugetCache(params.localNugetStore)
+      if(params.useLocalArtifacts)
+         XbimStages.enableLocalNugetCache()
+      else
+         XbimStages.disableLocalNugetCache()
+      
+      XbimStages.nuget('sources list')
 
       // Cleaning nupkg builds
       powershell "dotnet clean Xbim.Common/Xbim.Common.csproj -c ${params.buildConfig}"
