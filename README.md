@@ -10,19 +10,22 @@ Prerequisites of Jenkins
 - MSBuild Plugin 
 - PowerShell Plugin
 
+Environment variables:
+- LOCAL_NUGET_CACHE (Local nuget cache)
+
 ### BuildXbimEssentials 
 
 Packs and locally publishes modular essential packages
 
 Parameters:
 - doCleanUpWs (boolean)
-- localNugetStore (local path)
 - xbimRepository (URL)
 - xbimBranch (name)
 - buildConfig (Release, Debug)
 - buildMajor (int)
 - buildMinor (int)
 - buildIdentifier (string or empty)
+- useLocalArtifacts (boolean flag)
 
 ### BuildXbimGeometry
 
@@ -31,10 +34,14 @@ Packs and locally publishes modular essential packages
 Parameters:
 - doCleanUpWs (boolean)
 - doUpdatePackages (boolean)
-- localNugetStore (local path)
 - xbimRepository (URL)
 - xbimBranch (name)
 - buildConfig (Release, Debug)
 - buildMajor (int)
 - buildMinor (int)
 - buildIdentifier (string or empty)
+- useLocalArtifacts (boolean flag)
+
+### BuildXbimWindowsUI
+
+Not tested yet.
