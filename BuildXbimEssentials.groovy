@@ -3,9 +3,11 @@ import java.text.SimpleDateFormat
 // Xbim.Essentials Build
 // based on azure-pipelines.yml configuration (https://github.com/xBimTeam/XbimEssentials/blob/master/azure-pipelines.yml)
 
+// Env:
+// - LOCAL_NUGET_CACHE
+
 // Parameters:
 // - doCleanUpWs (boolean)
-// - localNugetStore (local path)
 // - xbimRepository (URL)
 // - xbimBranch (name)
 // - buildConfig (Release, Debug)
@@ -28,7 +30,7 @@ node {
    echo "Building package version ${packageVersion}"
    currentBuild.displayName = "#${BUILD_NUMBER} (${packageVersion})"
 
-   def prebuiltPckgPath = "${params.localNugetStore}"
+   def prebuiltPckgPath = "${LOCAL_NUGET_CACHE}"
    
    stage('Clean up') {
        if(params.doCleanUpWs) {
