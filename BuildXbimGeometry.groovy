@@ -53,14 +53,14 @@ node {
       //powershell "dotnet clean Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj -c ${params.buildConfig}"
 
       // Restore & update via nuget
-      XbimStages.addLocalNugetCache(params.localNugetStore)
+      XbimStages.addLocalNugetCache(LOCAL_NUGET_CACHE)
       if(params.useLocalArtifacts)
          XbimStages.enableLocalNugetCache()
       else
          XbimStages.disableLocalNugetCache()
       
       // Set nuget cache path
-      XbimStages.nuget("config -set repositoryPath=${params.localNugetStore}")
+      XbimStages.nuget("config -set repositoryPath=${LOCAL_NUGET_CACHE}")
       XbimStages.nuget('sources list')
       
       // Remove project not needed
@@ -76,7 +76,7 @@ node {
 
       // Restore entire solution dependencies invoking nuget and msbuild
       XbimStages.nuget('restore Xbim.Geometry.Engine.sln')
-      XbimStages.msbuild("./Xbim.Geometry.Engine.sln /t:restore") // /p:RestoreSources=${params.localNugetStore}")
+      XbimStages.msbuild("./Xbim.Geometry.Engine.sln /t:restore") // /p:RestoreSources=${LOCAL_NUGET_CACHE}")
 
       // Replace versions native engine version identifiers
       powershell "((Get-Content -path Xbim.Geometry.Engine\\app.rc -Raw) -replace '\"FileVersion\", \"${buildVersion.major}.${buildVersion.minor}.0.0\"','\"FileVersion\", \"${buildVersion.major}.${buildVersion.minor}.${buildVersion.release}.${buildVersion.build}\"') | Set-Content -Path Xbim.Geometry.Engine\\app.rc" 
