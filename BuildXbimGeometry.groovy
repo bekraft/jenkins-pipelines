@@ -87,10 +87,10 @@ node {
        // Build for both platforms
        for(platform in ['x86','x64']) {
           for(target in (params.doCleanBuild ? ['clean', 'build'] : ['build'])) {
-             //XbimStages.msbuild("./Xbim.Geometry.Engine.sln /r /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")             
+             XbimStages.msbuild("./Xbim.Geometry.Engine.sln /r /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")             
              //XbimStages.msbuild("./Xbim.Geometry.Engine/Xbim.Geometry.Engine.vcxproj /r /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")
-             XbimStages.msbuild("./Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj /r /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")
-             XbimStages.msbuild("./Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj /r /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")
+             //XbimStages.msbuild("./Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj /r /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")
+             //XbimStages.msbuild("./Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj /r /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")
           }
        }
        
