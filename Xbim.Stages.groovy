@@ -19,11 +19,13 @@ def generateBuildVersion(majorVersion, minorVersion, buildQualifier = null) {
    }
 
    def halfMinutePerDay = (int)((buildDate.get(Calendar.HOUR_OF_DAY)*60 + buildDate.get(Calendar.MINUTE))/2)
-   
+   def shortYear = buildDate.get(Calendar.YEAR) % 100
+   def dayOfYear = String.format("%03d", buildDate.get(Calendar.DAY_OF_YEAR))
+    
    return [
        major: "${majorVersion}",
        minor: "${minorVersion}",
-       release: "${new SimpleDateFormat("yyD").format(buildDate.getTime())}",
+       release: "${shortYear}${dayOfYear}",
        qualifier: releaseQualifier,
        build: "${buildDate.get(Calendar.DAY_OF_MONTH)}${halfMinutePerDay}"
    ]
