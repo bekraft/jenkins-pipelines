@@ -19,18 +19,9 @@ import java.text.SimpleDateFormat
 node {
    checkout scm
    def XbimStages = load "Xbim.Stages.groovy"
-   def buildVersion 
-   if('Release' == params.buildConfig) {
-      buildVersion = XbimStages.generateBuildVersion(params.buildMajor, params.buildMinor, params.buildPreQualifier)
-   } else {
-      buildVersion = XbimStages.generateSnapshotVersion(params.buildMajor, params.buildMinor, params.buildPreQualifier)
-   }
-
-   def packageVersion = XbimStages.generaterPackageVersion(buildVersion)
-   echo "Building package version ${packageVersion}"
-   currentBuild.displayName = "#${BUILD_NUMBER} (${packageVersion})"
-
    def prebuiltPckgPath = "${LOCAL_NUGET_CACHE}"
+   def buildVersion 
+   def packageVersion   
    
    stage('Clean up') {
        if(params.doCleanUpWs) {
@@ -42,9 +33,19 @@ node {
    }
    
    stage('Git Checkout') { // for display purposes
-      git branch: "${params.xbimBranch}", url: "${params.xbimRepository}" 
+      git branch: "${params.xbimBranch}", url: "${params.xbimRepository}"
+      
+      if('Release' == params.buildConfig) {
+         buildVersion = XbimStages.generateBuildVersion(params.buildMajor, params.buildMinor, params.buildPreQualifier)
+      } else {
+         buildVersion = XbimStages.generateSnapshotVersion(params.buildMajor, params.buildMinor, params.buildPreQualifier)
+      }
+
+      packageVersion = XbimStages.generaterPackageVersion(buildVersion)
+      echo "Building package version ${packageVersion}"
+      currentBuild.displayName = "#${BUILD_NUMBER} (${packageVersion})"
    }
-   
+      
    stage('Preparation') {      
       XbimStages.cleanUpNupkgs()
       
