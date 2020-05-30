@@ -44,7 +44,7 @@ node {
 
    stage('Build') {
        for(target in (params.doCleanBuild ? ['clean', 'build'] : ['build'])) {
-          XbimStages.msbuild("./src/Dynamo.All.sln /r /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=Any")
+          XbimStages.msbuild("./src/Dynamo.All.sln /r /t:${target} /p:Configuration=${params.buildConfig} /p:Platform='Any CPU'")
        }
    }
 }
