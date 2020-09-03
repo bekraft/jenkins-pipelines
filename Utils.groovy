@@ -71,7 +71,7 @@ def cleanUpNupkgs() {
 def deployLocally(nugetCachePath) {
       echo "Deploying Nupkgs to ${params.localNugetStore} ..."
       
-      findFiles(glob:'**/*.nupkg').each { f ->
+      findFiles(glob:'**/*.?nupkg').each { f ->
          echo " Found pre-built package [${f}]"
          nuget("add ${WORKSPACE}/${f} -Source ${nugetCachePath} -Verbosity detailed")
       }
