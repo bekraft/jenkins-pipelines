@@ -14,15 +14,15 @@
 
 node {
    checkout scm
-   def XbimStages = load "Xbim.Stages.groovy"
+   def Utils = load "Utils.groovy"
    def buildVersion 
    if('Release' == params.buildConfig) {
-      buildVersion = XbimStages.generateBuildVersion(params.buildMajor, params.buildMinor, params.buildPreQualifier)
+      buildVersion = Utils.generateBuildVersion(params.buildMajor, params.buildMinor, params.buildPreQualifier)
    } else {
-      buildVersion = XbimStages.generateSnapshotVersion(params.buildMajor, params.buildMinor, params.buildPreQualifier)
+      buildVersion = Utils.generateSnapshotVersion(params.buildMajor, params.buildMinor, params.buildPreQualifier)
    }
 
-   def packageVersion = XbimStages.generaterPackageVersion(buildVersion)
+   def packageVersion = Utils.generaterPackageVersion(buildVersion)
    echo "Building package version ${packageVersion}"
    currentBuild.displayName = "#${BUILD_NUMBER} (${packageVersion})"
    
@@ -30,8 +30,8 @@ node {
        if(params.doCleanUpWs) {
          cleanWs()
        } else {
-         XbimStages.git('reset --hard')
-         XbimStages.git('clean -fd')
+         Utils.git('reset --hard')
+         Utils.git('clean -fd')
        }       
    }
    
@@ -41,28 +41,28 @@ node {
    
    stage('Preparation') {
       // Clean up old binary packages
-      XbimStages.cleanUpNupkgs()
+      Utils.cleanUpNupkgs()
 
       // Cleaning nupkg builds
       powershell "dotnet clean Xbim.Presentation/Xbim.Presentation.csproj -c ${params.buildConfig}"
       powershell "dotnet clean XbimXplorer/XbimXplorer.csproj -c ${params.buildConfig}"
 
       // Restore & update via nuget
-      XbimStages.addLocalNugetCache(params.localNugetStore)
-      XbimStages.nuget("config -set repositoryPath=${params.localNugetStore}")
-      XbimStages.nuget('sources list')
+      Utils.addLocalNugetCache(params.localNugetStore)
+      Utils.nuget("config -set repositoryPath=${params.localNugetStore}")
+      Utils.nuget('sources list')
 
       if(params.doUpdatePackages) {
           // Update all packages
-          XbimStages.nuget('update ./Xbim.WindowsUI.sln')
+          Utils.nuget('update ./Xbim.WindowsUI.sln')
       }
 
       // Update Xbim packages (Xbim.Ifc, Xbim.Tesselator, ...?)
-      XbimStages.updatePackages([], '^(Xbim).*')
+      Utils.updatePackages([], '^(Xbim).*')
 
       // Restore entire solution dependencies invoking nuget and msbuild
-      XbimStages.nuget('restore Xbim.WindowsUI.sln')
-      XbimStages.msbuild("./Xbim.WindowsUI.sln /t:restore /p:RestoreSources=${params.localNugetStore}")
+      Utils.nuget('restore Xbim.WindowsUI.sln')
+      Utils.msbuild("./Xbim.WindowsUI.sln /t:restore /p:RestoreSources=${params.localNugetStore}")
    }
 
    stage('Build') {

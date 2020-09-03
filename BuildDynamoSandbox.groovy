@@ -12,14 +12,14 @@
 
 node {
    checkout scm
-   def XbimStages = load "Xbim.Stages.groovy"
+   def Utils = load "Utils.groovy"
    def prebuiltPckgPath = "${LOCAL_NUGET_CACHE}"
    
    stage('Clean up') {
        if(params.doCleanUpWs) {
          cleanWs()
        } else {
-         XbimStages.git('reset --hard')
+         Utils.git('reset --hard')
        }
    }
    
@@ -29,22 +29,22 @@ node {
    
    stage('Preparation') {
       // Clean up old binary packages
-      XbimStages.cleanUpNupkgs()
+      Utils.cleanUpNupkgs()
 
       // Restore & update via nuget
-      XbimStages.addLocalNugetCache(LOCAL_NUGET_CACHE)
+      Utils.addLocalNugetCache(LOCAL_NUGET_CACHE)
       
       // Set nuget cache path
-      XbimStages.nuget("config -set repositoryPath=${LOCAL_NUGET_CACHE}")
-      XbimStages.nuget('sources list')
+      Utils.nuget("config -set repositoryPath=${LOCAL_NUGET_CACHE}")
+      Utils.nuget('sources list')
             
       // Restore entire solution dependencies invoking nuget and msbuild
-      XbimStages.msbuild("./src/Dynamo.All.sln /t:restore /p:RestoreSources=${LOCAL_NUGET_CACHE}")
+      Utils.msbuild("./src/Dynamo.All.sln /t:restore /p:RestoreSources=${LOCAL_NUGET_CACHE}")
    }
 
    stage('Build') {
        for(target in (params.doCleanBuild ? ['clean', 'build'] : ['build'])) {
-          XbimStages.msbuild("""./src/Dynamo.All.sln /r /t:${target} /p:Configuration=${params.buildConfig} /p:Platform="Any CPU"""")
+          Utils.msbuild("""./src/Dynamo.All.sln /r /t:${target} /p:Configuration=${params.buildConfig} /p:Platform="Any CPU"""")
        }
    }
 }

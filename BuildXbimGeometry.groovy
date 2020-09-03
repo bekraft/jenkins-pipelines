@@ -18,7 +18,7 @@
 
 node {
    checkout scm
-   def XbimStages = load "Xbim.Stages.groovy"
+   def Utils = load "Utils.groovy"
    def prebuiltPckgPath = "${LOCAL_NUGET_CACHE}"
    def buildVersion
    def packageVersion   
@@ -27,7 +27,7 @@ node {
        if(params.doCleanUpWs) {
          cleanWs()
        } else {
-         XbimStages.git('reset --hard')
+         Utils.git('reset --hard')
        }
    }
    
@@ -35,49 +35,49 @@ node {
       git branch: "${params.xbimBranch}", url: "${params.xbimRepository}"
       
       if('Release' == params.buildConfig) {
-         buildVersion = XbimStages.generateBuildVersion(params.buildMajor, params.buildMinor, params.buildPreQualifier)
+         buildVersion = Utils.generateBuildVersion(params.buildMajor, params.buildMinor, params.buildPreQualifier)
       } else {
-         buildVersion = XbimStages.generateSnapshotVersion(params.buildMajor, params.buildMinor, params.buildPreQualifier)
+         buildVersion = Utils.generateSnapshotVersion(params.buildMajor, params.buildMinor, params.buildPreQualifier)
       }
 
-      packageVersion = XbimStages.generaterPackageVersion(buildVersion)
+      packageVersion = Utils.generaterPackageVersion(buildVersion)
       echo "Building package version ${packageVersion}"
       currentBuild.displayName = "#${BUILD_NUMBER} (${packageVersion})"      
    }
    
    stage('Preparation') {
       // Clean up old binary packages
-      XbimStages.cleanUpNupkgs()
+      Utils.cleanUpNupkgs()
 
       // Cleaning nupkg builds
       //powershell "dotnet clean Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj -c ${params.buildConfig}"
       //powershell "dotnet clean Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj -c ${params.buildConfig}"
 
       // Restore & update via nuget
-      XbimStages.addLocalNugetCache(LOCAL_NUGET_CACHE)
+      Utils.addLocalNugetCache(LOCAL_NUGET_CACHE)
       if(params.useLocalArtifacts)
-         XbimStages.enableLocalNugetCache()
+         Utils.enableLocalNugetCache()
       else
-         XbimStages.disableLocalNugetCache()
+         Utils.disableLocalNugetCache()
       
       // Set nuget cache path
-      XbimStages.nuget("config -set repositoryPath=${LOCAL_NUGET_CACHE}")
-      XbimStages.nuget('sources list')
+      Utils.nuget("config -set repositoryPath=${LOCAL_NUGET_CACHE}")
+      Utils.nuget('sources list')
       
       // Remove project not needed
       powershell "dotnet sln ./Xbim.Geometry.Engine.sln remove ./Xbim.Geometry.Regression/XbimRegression.csproj"
       
       if(params.doUpdatePackages) {
           // Update all packages
-          XbimStages.nuget('update ./Xbim.Geometry.Engine.sln')
+          Utils.nuget('update ./Xbim.Geometry.Engine.sln')
       }
 
       // Update Xbim packages (Xbim.Ifc, Xbim.Tesselator, ...?)
-      XbimStages.updatePackages([], '^(Xbim).*')
+      Utils.updatePackages([], '^(Xbim).*')
 
       // Restore entire solution dependencies invoking nuget and msbuild
-      //XbimStages.nuget('restore Xbim.Geometry.Engine.sln')
-      XbimStages.msbuild("./Xbim.Geometry.Engine.sln /t:restore /p:RestoreSources=${LOCAL_NUGET_CACHE}")
+      //Utils.nuget('restore Xbim.Geometry.Engine.sln')
+      Utils.msbuild("./Xbim.Geometry.Engine.sln /t:restore /p:RestoreSources=${LOCAL_NUGET_CACHE}")
 
       // Replace versions native engine version identifiers
       powershell "((Get-Content -path Xbim.Geometry.Engine\\app.rc -Raw) -replace '\"FileVersion\", \"${buildVersion.major}.${buildVersion.minor}.0.0\"','\"FileVersion\", \"${buildVersion.major}.${buildVersion.minor}.${buildVersion.release}.${buildVersion.build}\"') | Set-Content -Path Xbim.Geometry.Engine\\app.rc" 
@@ -88,10 +88,10 @@ node {
        // Build for both platforms
        for(platform in ['x86','x64']) {
           for(target in (params.doCleanBuild ? ['clean', 'build'] : ['build'])) {
-             XbimStages.msbuild("./Xbim.Geometry.Engine.sln /r /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")             
-             //XbimStages.msbuild("./Xbim.Geometry.Engine/Xbim.Geometry.Engine.vcxproj /r /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")
-             //XbimStages.msbuild("./Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj /r /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")
-             //XbimStages.msbuild("./Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj /r /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")
+             Utils.msbuild("./Xbim.Geometry.Engine.sln /r /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")             
+             //Utils.msbuild("./Xbim.Geometry.Engine/Xbim.Geometry.Engine.vcxproj /r /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")
+             //Utils.msbuild("./Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj /r /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")
+             //Utils.msbuild("./Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj /r /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")
           }
        }
        

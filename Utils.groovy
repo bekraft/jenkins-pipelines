@@ -1,4 +1,4 @@
-// Xbim.Stages.groovy
+// Utils.groovy
 import java.text.SimpleDateFormat
 import hudson.plugins.git.GitTool
 

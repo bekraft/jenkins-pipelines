@@ -18,7 +18,7 @@ import java.text.SimpleDateFormat
 
 node {
    checkout scm
-   def XbimStages = load "Xbim.Stages.groovy"
+   def Utils = load "Utils.groovy"
    def prebuiltPckgPath = "${LOCAL_NUGET_CACHE}"
    def buildVersion 
    def packageVersion   
@@ -27,8 +27,8 @@ node {
        if(params.doCleanUpWs) {
          cleanWs()
        } else {
-         XbimStages.git('reset --hard')
-         XbimStages.git('clean -fd')
+         Utils.git('reset --hard')
+         Utils.git('clean -fd')
        }
    }
    
@@ -36,27 +36,27 @@ node {
       git branch: "${params.xbimBranch}", url: "${params.xbimRepository}"
       
       if('Release' == params.buildConfig) {
-         buildVersion = XbimStages.generateBuildVersion(params.buildMajor, params.buildMinor, params.buildPreQualifier)
+         buildVersion = Utils.generateBuildVersion(params.buildMajor, params.buildMinor, params.buildPreQualifier)
       } else {
-         buildVersion = XbimStages.generateSnapshotVersion(params.buildMajor, params.buildMinor, params.buildPreQualifier)
+         buildVersion = Utils.generateSnapshotVersion(params.buildMajor, params.buildMinor, params.buildPreQualifier)
       }
 
-      packageVersion = XbimStages.generaterPackageVersion(buildVersion)
+      packageVersion = Utils.generaterPackageVersion(buildVersion)
       echo "Building package version ${packageVersion}"
       currentBuild.displayName = "#${BUILD_NUMBER} (${packageVersion})"
    }
       
    stage('Preparation') {      
-      XbimStages.cleanUpNupkgs()
+      Utils.cleanUpNupkgs()
       
       // Restore & update via nuget
-      XbimStages.addLocalNugetCache(params.localNugetStore)
+      Utils.addLocalNugetCache(params.localNugetStore)
       if(params.useLocalArtifacts)
-         XbimStages.enableLocalNugetCache()
+         Utils.enableLocalNugetCache()
       else
-         XbimStages.disableLocalNugetCache()
+         Utils.disableLocalNugetCache()
       
-      XbimStages.nuget('sources list')
+      Utils.nuget('sources list')
 
       // Cleaning nupkg builds
       powershell "dotnet clean Xbim.Common/Xbim.Common.csproj -c ${params.buildConfig}"
@@ -94,5 +94,9 @@ node {
       powershell "dotnet remove Xbim.Tessellator/Xbim.Tessellator.csproj reference ../Xbim.Common/Xbim.Common.csproj ../Xbim.Ifc2x3/Xbim.Ifc2x3.csproj ../Xbim.Ifc4/Xbim.Ifc4.csproj"
       powershell "dotnet add Xbim.Tessellator/Xbim.Tessellator.csproj package Xbim.Ifc2x3 -s ${prebuiltPckgPath} -v ${packageVersion}"
       powershell "dotnet pack Xbim.Tessellator/Xbim.Tessellator.csproj -c ${params.buildConfig} /p:PackageVersion=${packageVersion} -o ${prebuiltPckgPath}"
+   }
+
+   stage('Publish & archive') {
+
    }
 }
