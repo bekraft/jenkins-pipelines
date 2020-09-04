@@ -5,7 +5,7 @@ import hudson.plugins.git.GitTool
 def localNugetCache = "jenkinsCache"
 
 def initEnv() {
-    addNugetCache(localNugetCache, "${LOCAL_NUGET_CACHE}")
+    addNugetCache(this.localNugetCache, "${LOCAL_NUGET_CACHE}")
     nuget("config -set repositoryPath=${LOCAL_NUGET_CACHE}")
 }
 
