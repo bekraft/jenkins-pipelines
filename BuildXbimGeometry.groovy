@@ -19,7 +19,6 @@
 node {
    checkout scm
    def Utils = load "Utils.groovy"
-   def prebuiltPckgPath = "${LOCAL_NUGET_CACHE}"
    def buildVersion
    def packageVersion   
    
@@ -54,14 +53,12 @@ node {
       //powershell "dotnet clean Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj -c ${params.buildConfig}"
 
       // Restore & update via nuget
-      Utils.addLocalNugetCache(LOCAL_NUGET_CACHE)
+      Utils.initEnv()
       if(params.useLocalArtifacts)
-         Utils.enableLocalNugetCache()
+         Utils.enableNugetCache(Utils.localNugetCache)
       else
-         Utils.disableLocalNugetCache()
-      
-      // Set nuget cache path
-      Utils.nuget("config -set repositoryPath=${LOCAL_NUGET_CACHE}")
+         Utils.disableNugetCache(Utils.localNugetCache)
+                  
       Utils.nuget('sources list')
       
       // Remove project not needed

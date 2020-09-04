@@ -13,7 +13,6 @@
 node {
    checkout scm
    def Utils = load "Utils.groovy"
-   def prebuiltPckgPath = "${LOCAL_NUGET_CACHE}"
    
    stage('Clean up') {
        if(params.doCleanUpWs) {
@@ -30,21 +29,16 @@ node {
    stage('Preparation') {
       // Clean up old binary packages
       Utils.cleanUpNupkgs()
-
-      // Restore & update via nuget
-      Utils.addLocalNugetCache(LOCAL_NUGET_CACHE)
-      
-      // Set nuget cache path
-      Utils.nuget("config -set repositoryPath=${LOCAL_NUGET_CACHE}")
+      Uitls.initEnv()
       Utils.nuget('sources list')
             
       // Restore entire solution dependencies invoking nuget and msbuild
-      Utils.msbuild("./src/Dynamo.All.sln /t:restore /p:RestoreSources=${LOCAL_NUGET_CACHE}")
+      Utils.msbuild("./src/Dynamo.All.sln /t:restore")
    }
 
    stage('Build') {
        for(target in (params.doCleanBuild ? ['clean', 'build'] : ['build'])) {
-          Utils.msbuild("""./src/Dynamo.All.sln /r /t:${target} /p:Configuration=${params.buildConfig} /p:Platform="Any CPU"""")
+          Utils.msbuild("""./src/Dynamo.All.sln /r /t:${target} /p:Configuration=${params.buildConfig} /p:Platform="Any CPU" """)
        }
    }
 }

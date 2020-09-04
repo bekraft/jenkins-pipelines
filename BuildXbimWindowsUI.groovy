@@ -4,7 +4,6 @@
 // Parameters:
 // - doCleanUpWs (boolean)
 // - doUpdatePackages (boolean)
-// - localNugetStore (local path)
 // - xbimRepository (URL)
 // - xbimBranch (name)
 // - buildConfig (Release, Debug)
@@ -48,8 +47,7 @@ node {
       powershell "dotnet clean XbimXplorer/XbimXplorer.csproj -c ${params.buildConfig}"
 
       // Restore & update via nuget
-      Utils.addLocalNugetCache(params.localNugetStore)
-      Utils.nuget("config -set repositoryPath=${params.localNugetStore}")
+      Utils.initEnv()      
       Utils.nuget('sources list')
 
       if(params.doUpdatePackages) {

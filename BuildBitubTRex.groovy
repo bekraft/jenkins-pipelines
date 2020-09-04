@@ -46,14 +46,8 @@ node {
       
    stage('Preparation') {      
       Utils.cleanUpNupkgs()
-      
-      // Restore & update via nuget
-      Utils.addLocalNugetCache(params.localNugetStore)
-      if(params.useLocalArtifacts)
-         Utils.enableLocalNugetCache()
-      else
-         Utils.disableLocalNugetCache()
-      
+      Utils.initEnv()
+      Utils.enableNugetCache(Utils.localNugetCache)
       Utils.nuget('sources list')
 
       // Cleaning nupkg builds

@@ -19,7 +19,7 @@ import java.text.SimpleDateFormat
 node {
    checkout scm
    def Utils = load "Utils.groovy"
-   def prebuiltPckgPath = "${LOCAL_NUGET_CACHE}"
+   def nugetPackageFolder = "${LOCAL_NUGET_CACHE}"
    def buildVersion 
    def packageVersion   
    
@@ -50,11 +50,11 @@ node {
       Utils.cleanUpNupkgs()
       
       // Restore & update via nuget
-      Utils.addLocalNugetCache(params.localNugetStore)
+      Utils.initEnv()
       if(params.useLocalArtifacts)
-         Utils.enableLocalNugetCache()
+         Utils.enableNugetCache(Utils.localNugetCache)
       else
-         Utils.disableLocalNugetCache()
+         Utils.disableNugetCache(Utils.localNugetCache)
       
       Utils.nuget('sources list')
 
@@ -69,31 +69,31 @@ node {
    }
    
    stage('Build') {      
-      powershell "dotnet pack Xbim.Common/Xbim.Common.csproj -c ${params.buildConfig} /p:PackageVersion=${packageVersion} -o ${prebuiltPckgPath}"
+      powershell "dotnet pack Xbim.Common/Xbim.Common.csproj -c ${params.buildConfig} /p:PackageVersion=${packageVersion} -o ${nugetPackageFolder}"
       // IFC4
       powershell "dotnet remove Xbim.Ifc4/Xbim.Ifc4.csproj reference ../Xbim.Common/Xbim.Common.csproj"
-      powershell "dotnet add Xbim.Ifc4/Xbim.Ifc4.csproj package Xbim.Common -s ${prebuiltPckgPath} -v ${packageVersion}"
-      powershell "dotnet pack Xbim.Ifc4/Xbim.Ifc4.csproj -c ${params.buildConfig} /p:PackageVersion=${packageVersion} -o ${prebuiltPckgPath}"
+      powershell "dotnet add Xbim.Ifc4/Xbim.Ifc4.csproj package Xbim.Common -s ${nugetPackageFolder} -v ${packageVersion}"
+      powershell "dotnet pack Xbim.Ifc4/Xbim.Ifc4.csproj -c ${params.buildConfig} /p:PackageVersion=${packageVersion} -o ${nugetPackageFolder}"
       // IFC2x3
       powershell "dotnet remove Xbim.Ifc2x3/Xbim.Ifc2x3.csproj reference ../Xbim.Common/Xbim.Common.csproj ../Xbim.Ifc4/Xbim.Ifc4.csproj"
-      powershell "dotnet add Xbim.Ifc2x3/Xbim.Ifc2x3.csproj package Xbim.Ifc4 -s ${prebuiltPckgPath} -v ${packageVersion}"
-      powershell "dotnet pack Xbim.Ifc2x3/Xbim.Ifc2x3.csproj -c ${params.buildConfig} /p:PackageVersion=${packageVersion} -o ${prebuiltPckgPath}"
+      powershell "dotnet add Xbim.Ifc2x3/Xbim.Ifc2x3.csproj package Xbim.Ifc4 -s ${nugetPackageFolder} -v ${packageVersion}"
+      powershell "dotnet pack Xbim.Ifc2x3/Xbim.Ifc2x3.csproj -c ${params.buildConfig} /p:PackageVersion=${packageVersion} -o ${nugetPackageFolder}"
       // MemoryModel
       powershell "dotnet remove Xbim.IO.MemoryModel/Xbim.IO.MemoryModel.csproj reference ../Xbim.Common/Xbim.Common.csproj ../Xbim.Ifc2x3/Xbim.Ifc2x3.csproj ../Xbim.Ifc4/Xbim.Ifc4.csproj"
-      powershell "dotnet add Xbim.IO.MemoryModel/Xbim.IO.MemoryModel.csproj package Xbim.Ifc2x3 -s ${prebuiltPckgPath} -v ${packageVersion}"
-      powershell "dotnet pack Xbim.IO.MemoryModel/Xbim.IO.MemoryModel.csproj -c ${params.buildConfig} /p:PackageVersion=${packageVersion} -o ${prebuiltPckgPath}"
+      powershell "dotnet add Xbim.IO.MemoryModel/Xbim.IO.MemoryModel.csproj package Xbim.Ifc2x3 -s ${nugetPackageFolder} -v ${packageVersion}"
+      powershell "dotnet pack Xbim.IO.MemoryModel/Xbim.IO.MemoryModel.csproj -c ${params.buildConfig} /p:PackageVersion=${packageVersion} -o ${nugetPackageFolder}"
       // Esent
       powershell "dotnet remove Xbim.IO.Esent/Xbim.IO.Esent.csproj reference ../Xbim.Common/Xbim.Common.csproj ../Xbim.IO.MemoryModel/Xbim.IO.MemoryModel.csproj"
-      powershell "dotnet add Xbim.IO.Esent/Xbim.IO.Esent.csproj package Xbim.IO.MemoryModel -s ${prebuiltPckgPath} -v ${packageVersion}"
-      powershell "dotnet pack Xbim.IO.Esent/Xbim.IO.Esent.csproj -c ${params.buildConfig} /p:PackageVersion=${packageVersion} -o ${prebuiltPckgPath}"
+      powershell "dotnet add Xbim.IO.Esent/Xbim.IO.Esent.csproj package Xbim.IO.MemoryModel -s ${nugetPackageFolder} -v ${packageVersion}"
+      powershell "dotnet pack Xbim.IO.Esent/Xbim.IO.Esent.csproj -c ${params.buildConfig} /p:PackageVersion=${packageVersion} -o ${nugetPackageFolder}"
       // Ifc
       powershell "dotnet remove Xbim.Ifc/Xbim.Ifc.csproj reference ../Xbim.Common/Xbim.Common.csproj ../Xbim.Ifc2x3/Xbim.Ifc2x3.csproj ../Xbim.Ifc4/Xbim.Ifc4.csproj ../Xbim.IO.MemoryModel/Xbim.IO.MemoryModel.csproj"
-      powershell "dotnet add Xbim.Ifc/Xbim.Ifc.csproj package Xbim.IO.MemoryModel -s ${prebuiltPckgPath} -v ${packageVersion}"
-      powershell "dotnet pack Xbim.Ifc/Xbim.Ifc.csproj -c ${params.buildConfig} /p:PackageVersion=${packageVersion} -o ${prebuiltPckgPath}"
+      powershell "dotnet add Xbim.Ifc/Xbim.Ifc.csproj package Xbim.IO.MemoryModel -s ${nugetPackageFolder} -v ${packageVersion}"
+      powershell "dotnet pack Xbim.Ifc/Xbim.Ifc.csproj -c ${params.buildConfig} /p:PackageVersion=${packageVersion} -o ${nugetPackageFolder}"
       // Tesselator
       powershell "dotnet remove Xbim.Tessellator/Xbim.Tessellator.csproj reference ../Xbim.Common/Xbim.Common.csproj ../Xbim.Ifc2x3/Xbim.Ifc2x3.csproj ../Xbim.Ifc4/Xbim.Ifc4.csproj"
-      powershell "dotnet add Xbim.Tessellator/Xbim.Tessellator.csproj package Xbim.Ifc2x3 -s ${prebuiltPckgPath} -v ${packageVersion}"
-      powershell "dotnet pack Xbim.Tessellator/Xbim.Tessellator.csproj -c ${params.buildConfig} /p:PackageVersion=${packageVersion} -o ${prebuiltPckgPath}"
+      powershell "dotnet add Xbim.Tessellator/Xbim.Tessellator.csproj package Xbim.Ifc2x3 -s ${nugetPackageFolder} -v ${packageVersion}"
+      powershell "dotnet pack Xbim.Tessellator/Xbim.Tessellator.csproj -c ${params.buildConfig} /p:PackageVersion=${packageVersion} -o ${nugetPackageFolder}"
    }
 
    stage('Publish & archive') {

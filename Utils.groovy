@@ -2,6 +2,13 @@
 import java.text.SimpleDateFormat
 import hudson.plugins.git.GitTool
 
+def localNugetCache = "jenkinsCache"
+
+def initEnv() {
+    Utils.addNugetCache(localNugetCache, "${LOCAL_NUGET_CACHE}")
+    Utils.nuget("config -set repositoryPath=${LOCAL_NUGET_CACHE}")
+}
+
 def generateSnapshotVersion(majorVersion, minorVersion, buildQualifier = null) {
     def shortversion = git('rev-parse --short HEAD')
     return generateBuildVersion(majorVersion, minorVersion, "${null!=buildQualifier? buildQualifier:''}${shortversion}")
@@ -77,21 +84,21 @@ def deployLocally(nugetCachePath) {
       }
 }
 
-def removeLocalNugetCache(nugetCachePath) {
-    nuget("sources remove -Name \"localCache\" -Source \"${nugetCachePath}\"")
+def removeNugetCache(cacheName, nugetCachePath) {
+    nuget("sources remove -Name \"${cacheName}\" -Source \"${nugetCachePath}\"")
 }
     
-def disableLocalNugetCache() {
-    nuget("sources disable -Name \"localCache\"")
+def disableNugetCache(cacheName) {
+    nuget("sources disable -Name \"${cacheName}\"")
 }
     
-def enableLocalNugetCache() {
-    nuget("sources enable -Name \"localCache\"")
+def enableNugetCache(cacheName) {
+    nuget("sources enable -Name \"${cacheName}\"")
 }
 
-def addLocalNugetCache(nugetCachePath) {
-    if(0 != nuget("sources update -Name \"localCache\" -Source \"${nugetCachePath}\"")) {
-        if(0 != nuget("sources add -Name \"localCache\" -Source \"${nugetCachePath}\"")) {
+def addNugetCache(cacheName, nugetCachePath) {
+    if(0 != nuget("sources update -Name \"${cacheName}\" -Source \"${nugetCachePath}\"")) {
+        if(0 != nuget("sources add -Name \"${cacheName}\" -Source \"${nugetCachePath}\"")) {
             error "Could not add ${nugetCachePath} to nuget repository configuration!"
         }
     }
