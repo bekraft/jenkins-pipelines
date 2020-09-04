@@ -5,8 +5,8 @@ import hudson.plugins.git.GitTool
 def localNugetCache = "jenkinsCache"
 
 def initEnv() {
-    Utils.addNugetCache(localNugetCache, "${LOCAL_NUGET_CACHE}")
-    Utils.nuget("config -set repositoryPath=${LOCAL_NUGET_CACHE}")
+    addNugetCache(localNugetCache, "${LOCAL_NUGET_CACHE}")
+    nuget("config -set repositoryPath=${LOCAL_NUGET_CACHE}")
 }
 
 def generateSnapshotVersion(majorVersion, minorVersion, buildQualifier = null) {
