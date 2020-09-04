@@ -3,7 +3,8 @@ import java.text.SimpleDateFormat
 // BitubTRex Build
 
 // Env:
-// - LOCAL_NUGET_CACHE
+// - LOCAL_NUGET_CACHE .. local Nuget cache
+// - PROTOBUF_SRC .. protobuf src directory (for additional proto includes)
 
 // Parameters:
 // - doCleanUpWs (boolean)
@@ -66,11 +67,10 @@ node {
    }
    
    stage('Build') {      
-      powershell "dotnet build BitubTRex.sln -c ${params.buildConfig}"
-      powershell "dotnet pack BitubTRex.sln -c ${params.buildConfig} /p:PackageVersion=${packageVersion}"
+      powershell "dotnet build BitubTRex.sln -c ${params.buildConfig} /p:FileVersion=${packageVersion} /p:AssemblyVersion=${packageVersion} /p:Version=${packageVersion}"
    }
 
    stage('Publish & archive') {
-      archiveArtifacts artifacts: '**/*.?nupkg', onlyIfSuccessful: true
+      archiveArtifacts artifacts: '**/*.nupkg, **/*.snupkg', onlyIfSuccessful: true
    }
 }
