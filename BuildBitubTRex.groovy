@@ -13,6 +13,7 @@ import java.text.SimpleDateFormat
 // - buildMinor (int)
 // - buildPreQualifier (string)
 // - useLocalArtifacts (boolean)
+// - runTests (boolean)
 
 node {
    checkout scm
@@ -54,8 +55,14 @@ node {
       powershell "dotnet clean BitubTRex.sln -c ${params.buildConfig}"
    }
 
-   stage('Test') {
-      powershell "dotnet test BitubTRex.sln -c ${params.buildConfig}"
+   if (params.runTests) {
+      stage('Test') {      
+         powershell "dotnet test BitubTRex.sln -c ${params.buildConfig} -s BitubTRex.runsettings"
+      }
+   } else {
+      stage('No test') {
+         echo "Skipped testing ..."
+      }
    }
    
    stage('Build') {      
