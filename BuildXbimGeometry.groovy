@@ -55,9 +55,9 @@ node {
       // Restore & update via nuget
       Utils.initEnv()
       if(params.useLocalArtifacts)
-         Utils.enableNugetCache(Utils.localNugetCache)
+         Utils.enableNugetCache(Utils.localNugetCacheName())
       else
-         Utils.disableNugetCache(Utils.localNugetCache)
+         Utils.disableNugetCache(Utils.localNugetCacheName())
                   
       Utils.nuget('sources list')
       

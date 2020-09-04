@@ -2,10 +2,12 @@
 import java.text.SimpleDateFormat
 import hudson.plugins.git.GitTool
 
-def localNugetCache = "jenkinsCache"
+def localNugetCacheName() { 
+    return "jenkinsCache"
+}
 
 def initEnv() {
-    addNugetCache(this.localNugetCache, "${LOCAL_NUGET_CACHE}")
+    addNugetCache(localNugetCacheName(), "${LOCAL_NUGET_CACHE}")
     nuget("config -set repositoryPath=${LOCAL_NUGET_CACHE}")
 }
 
