@@ -39,7 +39,7 @@ node {
          buildVersion = Utils.generateSnapshotVersion(params.buildMajor, params.buildMinor, params.buildPreQualifier)
       }
 
-      packageVersion = Utils.generaterPackageVersion(buildVersion)
+      packageVersion = Utils.generatePackageVersion(buildVersion)
       echo "Building package version ${packageVersion}"
       currentBuild.displayName = "#${BUILD_NUMBER} (${packageVersion})"      
    }

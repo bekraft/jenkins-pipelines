@@ -21,7 +21,7 @@ node {
       buildVersion = Utils.generateSnapshotVersion(params.buildMajor, params.buildMinor, params.buildPreQualifier)
    }
 
-   def packageVersion = Utils.generaterPackageVersion(buildVersion)
+   def packageVersion = Utils.generatePackageVersion(buildVersion)
    echo "Building package version ${packageVersion}"
    currentBuild.displayName = "#${BUILD_NUMBER} (${packageVersion})"
    

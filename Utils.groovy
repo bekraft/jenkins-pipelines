@@ -23,11 +23,11 @@ def generateBuildVersion(majorVersion, minorVersion, buildQualifier = null) {
        buildDate.setTime(buildQualifier)
    } else {
        if(null!=buildQualifier && buildQualifier.trim()) {
-            releaseQualifier = "-${buildQualifier}"
+            releaseQualifier = "${buildQualifier}"
        }
    }
 
-   def halfMinutePerDay = (int)((buildDate.get(Calendar.HOUR_OF_DAY)*60 + buildDate.get(Calendar.MINUTE))/2)
+   def minuteOfDay = (buildDate.get(Calendar.DAY_OF_MONTH)*24*60 + buildDate.get(Calendar.HOUR_OF_DAY)*60 + buildDate.get(Calendar.MINUTE))
    def shortYear = buildDate.get(Calendar.YEAR) % 100
    def dayOfYear = String.format("%03d", buildDate.get(Calendar.DAY_OF_YEAR))
     
@@ -36,8 +36,23 @@ def generateBuildVersion(majorVersion, minorVersion, buildQualifier = null) {
        minor: "${minorVersion}",
        release: "${shortYear}${dayOfYear}",
        qualifier: releaseQualifier,
-       build: "${buildDate.get(Calendar.DAY_OF_MONTH)}${halfMinutePerDay}"
+       build: "${minuteOfDay}"
    ]
+}
+
+def runDotNet(command, config, buildVersion, additionalProps) {
+    def buildProps = buildVersionToDotNetProp(buildVersion)
+    powershell """dotnet ${command} -c ${config} ${buildProps} ${additionalProps}"""
+}
+
+def buildVersionToDotNetProp(buildVersion) {
+    def q 
+    if (null != buildVersion.qualifier && buildVersion.qualifier.trim())
+        q = "-${buildVersion.qualifier}"
+    else
+        q = ""
+
+    return "/p:BuildMajor=${buildVersion.major} /p:BuildMinor=${buildVersion.minor} /p:BuildRelease=${buildVersion.release} /p:BuildQualifier=${q} /p:Build=${buildVersion.build}"
 }
 
 def git(command) {
@@ -48,12 +63,18 @@ def git(command) {
     return powershell(returnStdout:true, script:"${t.getGitExe()} ${command}").trim()
 }
 
-def generaterPackageVersion(v) {
-    return "${v.major}.${v.minor}.${v.release}${v.qualifier}.${v.build}"
+def generatePackageVersion(buildVersion) {
+    def q 
+    if (null != buildVersion.qualifier && buildVersion.qualifier.trim())
+        q = "-${buildVersion.qualifier}"
+    else
+        q = ""
+
+    return "${buildVersion.major}.${buildVersion.minor}.${buildVersion.release}${q}.${buildVersion.build}"
 }
 
-def generaterAssemblyVersion(v) {
-    return "${v.major}.${v.minor}.${v.release}.${v.build}"
+def generaterAssemblyVersion(buildVersion) {
+    return "${buildVersion.major}.${buildVersion.minor}.${buildVersion.release}.${buildVersion.build}"
 }
 
 def nuget(command) {

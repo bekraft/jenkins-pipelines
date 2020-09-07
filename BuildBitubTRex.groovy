@@ -41,7 +41,7 @@ node {
          buildVersion = Utils.generateSnapshotVersion(params.buildMajor, params.buildMinor, params.buildPreQualifier)
       }
 
-      packageVersion = Utils.generaterPackageVersion(buildVersion)
+      packageVersion = Utils.generatePackageVersion(buildVersion)
       echo "Building package version ${packageVersion}"
       currentBuild.displayName = "#${BUILD_NUMBER} (${packageVersion})"
    }
@@ -66,11 +66,19 @@ node {
       }
    }
    
-   stage('Build') {      
-      powershell "dotnet build BitubTRex.sln -c ${params.buildConfig} /p:FileVersion=${packageVersion} /p:AssemblyVersion=${packageVersion} /p:Version=${packageVersion}"
+   stage('Build') { 
+      def propsAdditional    
+      if ('Debug' == params.buildConfig)
+         propsAdditional = "-p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg"
+      else
+         propsAdditional = ""
+
+      def propsBuildVersion = Utils.buildVersionToDotNetProp(buildVersion)
+      powershell "dotnet build BitubTRex.sln -c ${params.buildConfig} ${propsBuildVersion} ${propsAdditional}"
    }
 
    stage('Publish & archive') {
+      powershell "dotnet pack BitubTRex.sln -c ${params.buildConfig}"
       archiveArtifacts artifacts: '**/*.nupkg, **/*.snupkg', onlyIfSuccessful: true
    }
 }
