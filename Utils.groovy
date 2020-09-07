@@ -13,7 +13,12 @@ def initEnv() {
 
 def generateSnapshotVersion(majorVersion, minorVersion, buildQualifier = null) {
     def shortversion = git('rev-parse --short HEAD')
-    return generateBuildVersion(majorVersion, minorVersion, "${null!=buildQualifier? buildQualifier:''}${shortversion}")
+    def qualifier
+    if (buildQualifier?.trim())
+        qualifier = "${buildQualifier}-"
+    else
+        qualifier = ""
+    return generateBuildVersion(majorVersion, minorVersion, "${qualifier}${shortversion}")
 }
 
 def generateBuildVersion(majorVersion, minorVersion, buildQualifier = null) {   
@@ -46,13 +51,13 @@ def runDotNet(command, config, buildVersion, additionalProps) {
 }
 
 def buildVersionToDotNetProp(buildVersion) {
-    def q 
-    if (null != buildVersion.qualifier && buildVersion.qualifier.trim())
-        q = "-${buildVersion.qualifier}"
+    def qualifier 
+    if (buildVersion.qualifier?.trim())
+        qualifier = "-${buildVersion.qualifier}"
     else
-        q = ""
+        qualifier = ""
 
-    return "/p:BuildMajor=${buildVersion.major} /p:BuildMinor=${buildVersion.minor} /p:BuildRelease=${buildVersion.release} /p:BuildQualifier=${q} /p:Build=${buildVersion.build}"
+    return "/p:BuildMajor=${buildVersion.major} /p:BuildMinor=${buildVersion.minor} /p:BuildRelease=${buildVersion.release} /p:BuildQualifier=${qualifier} /p:Build=${buildVersion.build}"
 }
 
 def git(command) {

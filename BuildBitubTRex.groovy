@@ -65,20 +65,20 @@ node {
          echo "Skipped testing ..."
       }
    }
-   
-   stage('Build') { 
-      def propsAdditional    
-      if ('Debug' == params.buildConfig)
-         propsAdditional = "-p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg"
-      else
-         propsAdditional = ""
 
-      def propsBuildVersion = Utils.buildVersionToDotNetProp(buildVersion)
-      powershell "dotnet build BitubTRex.sln -c ${params.buildConfig} ${propsBuildVersion} ${propsAdditional}"
+   def propsBuildVersion = Utils.buildVersionToDotNetProp(buildVersion)
+   def buildPropsAdditional    
+   if ('Debug' == params.buildConfig)
+      buildPropsAdditional = "-p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg"
+   else
+      buildPropsAdditional = ""
+
+   stage('Build') {       
+      powershell "dotnet build BitubTRex.sln -c ${params.buildConfig} ${propsBuildVersion} ${buildPropsAdditional}"
    }
 
    stage('Publish & archive') {
-      powershell "dotnet pack BitubTRex.sln -c ${params.buildConfig}"
+      powershell "dotnet pack BitubTRex.sln -c ${params.buildConfig} ${propsBuildVersion} ${buildPropsAdditional}"
       archiveArtifacts artifacts: '**/*.nupkg, **/*.snupkg', onlyIfSuccessful: true
    }
 }
