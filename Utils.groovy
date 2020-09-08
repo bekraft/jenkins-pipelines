@@ -103,8 +103,8 @@ def cleanUpNupkgs() {
       }
 }
 
-def deployLocally(nugetCachePath) {
-      echo "Deploying Nupkgs to ${params.localNugetStore} ..."
+def deployToNugetLocalCache(nugetCachePath) {
+      echo "Deploying Nupkgs to ${nugetCachePath} ..."
       
       findFiles(glob:'**/*.?nupkg').each { f ->
          echo " Found pre-built package [${f}]"
@@ -112,8 +112,8 @@ def deployLocally(nugetCachePath) {
       }
 }
 
-def removeNugetCache(cacheName, nugetCachePath) {
-    nuget("sources remove -Name \"${cacheName}\" -Source \"${nugetCachePath}\"")
+def removeNugetCache(cacheName, nugetCacheUri) {
+    nuget("sources remove -Name \"${cacheName}\" -Source \"${nugetCacheUri}\"")
 }
     
 def disableNugetCache(cacheName) {
@@ -124,10 +124,10 @@ def enableNugetCache(cacheName) {
     nuget("sources enable -Name \"${cacheName}\"")
 }
 
-def addNugetCache(cacheName, nugetCachePath) {
-    if(0 != nuget("sources update -Name \"${cacheName}\" -Source \"${nugetCachePath}\"")) {
-        if(0 != nuget("sources add -Name \"${cacheName}\" -Source \"${nugetCachePath}\"")) {
-            error "Could not add ${nugetCachePath} to nuget repository configuration!"
+def addNugetCache(cacheName, nugetCacheUri) {
+    if(0 != nuget("sources update -Name \"${cacheName}\" -Source \"${nugetCacheUri}\"")) {
+        if(0 != nuget("sources add -Name \"${cacheName}\" -Source \"${nugetCacheUri}\"")) {
+            error "Could not add ${nugetCacheUri} to nuget repository configuration!"
         }
     }
 }

@@ -1,36 +1,28 @@
-// BitubTRex Build
+// BitubTRexDynamo Build
 
 // Env:
-// - LOCAL_NUGET_CACHE .. local Nuget cache
-// - PROTOBUF_SRC .. protobuf src directory (for additional proto includes)
 
 // Parameters:
-// - doCleanUpWs (boolean)
 // - branch (name)
 // - buildConfig (Release, Debug)
 // - buildMajor (int)
 // - buildMinor (int)
 // - buildPreQualifier (string)
-// - deployArtifacts (boolean)
 // - runTests (boolean)
 
 node {
 	checkout scm
 	def Utils = load "Utils.groovy"
+	def deployLocalFolder = 'DeployPackages'
 	def buildVersion 
 	def packageVersion   
-	
+   
 	stage('Clean up') {
-		if(params.doCleanUpWs) {
-			cleanWs()
-		} else {
-			Utils.git('reset --hard')
-			Utils.git('clean -fd')
-		}
+		cleanWs()
 	}
-	
+   
 	stage('Git Checkout') { // for display purposes
-		git branch: "${params.branch}", url: "https://github.com/bekraft/BitubTRex.git"
+		git branch: "${params.branch}", url: "https://github.com/bekraft/BitubTRexDynamo.git"
 		
 		if('Release' == params.buildConfig) {
 			buildVersion = Utils.generateBuildVersion(params.buildMajor, params.buildMinor, params.buildPreQualifier)
@@ -42,24 +34,24 @@ node {
 		echo "Building package version ${packageVersion}"
 		currentBuild.displayName = "#${BUILD_NUMBER} (${packageVersion})"
 	}
-		
+	  
 	stage('Preparation') {      
-		Utils.cleanUpNupkgs()
 		Utils.initEnv()
 		Utils.enableNugetCache(Utils.localNugetCacheName())
 		Utils.nuget('sources list')
 
 		// Cleaning nupkg builds
-		powershell "dotnet clean BitubTRex.sln -c ${params.buildConfig}"
+		powershell "dotnet clean BitubTRexDynamo.sln -c ${params.buildConfig}"
 	}
 
 	if (params.runTests) {
 		stage('Test') {      
-			powershell "dotnet test BitubTRex.sln -c ${params.buildConfig} -s BitubTRex.runsettings"
+			powershell "dotnet test BitubTRexDynamo.sln -c ${params.buildConfig} -s BitubTRexDynamo.runsettings"
 		}
 	}
 
-	def propsBuildVersion = Utils.buildVersionToDotNetProp(buildVersion)
+   	def propsBuildVersion = Utils.buildVersionToDotNetProp(buildVersion)
+
 	def buildPropsAdditional    
 	if ('Debug' == params.buildConfig)
 		buildPropsAdditional = "-p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg"
@@ -67,11 +59,12 @@ node {
 		buildPropsAdditional = ""
 
 	stage('Build') {       
-		powershell "dotnet build BitubTRex.sln -c ${params.buildConfig} ${propsBuildVersion} ${buildPropsAdditional}"
-	}
+		powershell "dotnet build BitubTRexDynamo.sln -c ${params.buildConfig} ${propsBuildVersion} ${buildPropsAdditional} /p:DeployPath=${deployLocalFolder}"
+   	}
 
 	stage('Publish & archive') {
-		powershell "dotnet pack BitubTRex.sln -c ${params.buildConfig} ${propsBuildVersion} ${buildPropsAdditional}"
+		powershell "dotnet pack BitubTRexDynamo.sln -c ${params.buildConfig} ${propsBuildVersion} ${buildPropsAdditional} /p:DeployPath=${deployLocalFolder}"
+		zip zipFile: "TRexDynamo-${packageVersion}.zip", archive : true, dir: deployLocalFolder
 		archiveArtifacts artifacts: '**/*.nupkg, **/*.snupkg', onlyIfSuccessful: true
 	}
 }
