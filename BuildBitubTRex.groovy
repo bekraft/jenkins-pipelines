@@ -1,11 +1,12 @@
 // BitubTRex Build
 
 // Env:
-// - LOCAL_NUGET_CACHE .. local Nuget cache
+// - NUGET_SERVER_URL .. local Nuget cache
+// - NugetApiKey .. API key from credentials manager
 // - PROTOBUF_SRC .. protobuf src directory (for additional proto includes)
 
 // Parameters:
-// - doCleanUpWs (boolean)
+// - cleanWorkspace (boolean)
 // - branch (name)
 // - buildConfig (Release, Debug)
 // - buildMajor (int)
@@ -21,7 +22,7 @@ node {
 	def packageVersion   
 	
 	stage('Clean up') {
-		if(params.doCleanUpWs) {
+		if(params.cleanWorkspace) {
 			cleanWs()
 		} else {
 			Utils.git('reset --hard')
@@ -73,5 +74,8 @@ node {
 	stage('Publish & archive') {
 		powershell "dotnet pack BitubTRex.sln -c ${params.buildConfig} ${propsBuildVersion} ${buildPropsAdditional}"
 		archiveArtifacts artifacts: '**/*.nupkg, **/*.snupkg', onlyIfSuccessful: true
+
+		if (params.deployArtifacts)
+			Utils.deploy(NUGET_SERVER_URL, 'NugetApiKey')
 	}
 }
