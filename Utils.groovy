@@ -118,7 +118,7 @@ def deploy(nugetUrl, apiKeyIdentity) {
 	withCredentials([string(credentialsId: apiKeyIdentity, variable: 'APIKEY')]) {
 		findFiles(glob:'**/*.?nupkg').each { f ->
 			echo "Deploying [${f}] to ${nugetUrl}"
-			nuget("push -s ${nugetUrl} -k ${APIKEY} ${WORKSPACE}/${f}")
+			nuget("push -Source ${nugetUrl} -ApiKey ${APIKEY} ${WORKSPACE}/${f}")
 		}
 	}
 }
