@@ -71,10 +71,11 @@ node {
 	}
 
 	stage('Publish & archive') {
-		powershell "dotnet pack BitubTRex.sln -c ${params.buildConfig} ${propsBuildVersion} ${buildPropsAdditional}"
-		archiveArtifacts artifacts: '**/*.nupkg, **/*.snupkg', onlyIfSuccessful: true
+		powershell "dotnet pack BitubTRex.sln -c ${params.buildConfig} ${propsBuildVersion} ${buildPropsAdditional}"		
 
 		if (params.deployArtifacts)
 			Utils.deploy(NUGET_PRIVATE_URL, 'NugetPrivateApiKey')
+
+		archiveArtifacts artifacts: '**/*.nupkg, **/*.snupkg', onlyIfSuccessful: true
 	}
 }

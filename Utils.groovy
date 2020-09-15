@@ -107,7 +107,7 @@ def msbuild(command) {
 }
 
 def cleanUpNupkgs() {
-	  findFiles(glob:'**/*.?nupkg').each { f ->
+	  findFiles(glob:'**/*.*nupkg').each { f ->
 		 if(0 != powershell(returnStatus: true, script: "rm ${WORKSPACE}/${f}")) {
 			 echo "! Could not remove [${f}] from workspace !"
 		 }
@@ -116,17 +116,19 @@ def cleanUpNupkgs() {
 
 def deploy(nugetUrl, apiKeyIdentity) {
 	withCredentials([string(credentialsId: apiKeyIdentity, variable: 'APIKEY')]) {
-		findFiles(glob:'**/*.?nupkg').each { f ->
-			echo "Deploying [${f}] to ${nugetUrl}"
-			nuget("push -Source ${nugetUrl} -ApiKey ${APIKEY} ${WORKSPACE}/${f}")
+		findFiles(glob:'**/*.*nupkg').each { f ->
+			echo "Deploying '${f}' to ${nugetUrl}"
+			if (0 != nuget("push -Source ${nugetUrl} -ApiKey ${APIKEY} ${WORKSPACE}/${f}"))
+				error "Failure while pushing '${f}' to '${nugetUrl}'."
 		}
 	}
 }
 
 def deployToNugetLocalCache(nugetCachePath) {
-	findFiles(glob:'**/*.?nupkg').each { f ->
-		echo "Deploying [${f}] to ${nugetCachePath}"
-		nuget("add ${WORKSPACE}/${f} -Source ${nugetCachePath} -Verbosity detailed")
+	findFiles(glob:'**/*.*nupkg').each { f ->
+		echo "Deploying '${f}' to ${nugetCachePath}"
+		if (0 != nuget("add ${WORKSPACE}/${f} -Source ${nugetCachePath} -Verbosity detailed"))
+			error "Failure while adding '${f}' to '${nugetCachePath}'."
 	}
 }
 
