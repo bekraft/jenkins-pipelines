@@ -3,6 +3,7 @@
 // Env:
 
 // Parameters:
+// - cleanWorkspace (boolean)
 // - branch (name)
 // - buildConfig (Release, Debug)
 // - buildMajor (int)
@@ -18,7 +19,12 @@ node {
 	def packageVersion   
    
 	stage('Clean up') {
-		cleanWs()
+		if(params.cleanWorkspace) {
+			cleanWs()
+		} else {
+			Utils.git('reset --hard')
+			Utils.git('clean -fd')
+		}
 	}
    
 	stage('Git Checkout') { // for display purposes

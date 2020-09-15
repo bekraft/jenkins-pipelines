@@ -1,8 +1,8 @@
 // BitubTRex Build
 
 // Env:
-// - NUGET_SERVER_URL .. local Nuget cache
-// - NugetApiKey .. API key from credentials manager
+// - NUGET_PRIVATE_URL .. private Nuget deployment server
+// - NugetPrivateApiKey .. API key from credentials manager
 // - PROTOBUF_SRC .. protobuf src directory (for additional proto includes)
 
 // Parameters:
@@ -76,6 +76,6 @@ node {
 		archiveArtifacts artifacts: '**/*.nupkg, **/*.snupkg', onlyIfSuccessful: true
 
 		if (params.deployArtifacts)
-			Utils.deploy(NUGET_SERVER_URL, 'NugetApiKey')
+			Utils.deploy(NUGET_PRIVATE_URL, 'NugetPrivateApiKey')
 	}
 }

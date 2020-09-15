@@ -2,13 +2,24 @@
 import java.text.SimpleDateFormat
 import hudson.plugins.git.GitTool
 
+// Env
+// - NUGET_PRIVATE_URL .. URL to private Nuget deploy server
+// - NUGET_PUBLIC_URL .. URL to public Nuget deploy server
+// Credentials & secrets
+// - NugetPrivateApiKey .. API key to private Nuget deploy server
+// - NugetPublicApiKey .. API key to public Nuget deploy server
+
 def localNugetCacheName() { 
 	return "jenkinsCache"
 }
 
+def nugetDeployServerName() {
+	return "nugetDeployServer"
+}
+
 def initEnv() {
-	addNugetCache(localNugetCacheName(), "${LOCAL_NUGET_CACHE}")
-	nuget("config -set repositoryPath=${LOCAL_NUGET_CACHE}")
+	addNugetCache(nugetDeployServerName(), "${NUGET_PRIVATE_URL}")
+	//nuget("config -set repositoryPath=${LOCAL_NUGET_CACHE}")
 }
 
 def generateSnapshotVersion(majorVersion, minorVersion, buildQualifier = null) {
