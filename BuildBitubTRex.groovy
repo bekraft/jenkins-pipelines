@@ -8,7 +8,7 @@
 // Parameters:
 // - cleanWorkspace (boolean)
 // - branch (name)
-// - buildConfig (Release, Debug)
+// - buildConfig (Release, Beta)
 // - buildMajor (int)
 // - buildMinor (int)
 // - buildPreQualifier (string)
@@ -61,7 +61,7 @@ node {
 
 	def propsBuildVersion = Utils.buildVersionToDotNetProp(buildVersion)
 	def buildPropsAdditional    
-	if ('Debug' == params.buildConfig)
+	if ('Release' != params.buildConfig)
 		buildPropsAdditional = "-p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg"
 	else
 		buildPropsAdditional = ""
