@@ -43,7 +43,6 @@ node {
 	  
 	stage('Preparation') {      
 		Utils.initEnv()
-		Utils.enableNugetCache(Utils.localNugetCacheName())
 		Utils.nuget('sources list')
 
 		// Cleaning nupkg builds

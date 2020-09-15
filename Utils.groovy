@@ -115,9 +115,10 @@ def cleanUpNupkgs() {
 }
 
 def deploy(nugetUrl, apiKeyIdentity) {
-	findFiles(glob:'**/*.?nupkg').each { f ->
-		 echo "Deploying [${f}] to ${nugetUrl}"
-		 nuget("push -s ${nugetUrl} -k ${credentials(apiKeyIdentity)} ${WORKSPACE}/${f}")
+	withCredentials([string(credentialsId: apiKeyIdentity, variable: 'APIKEY')]) {
+		findFiles(glob:'**/*.?nupkg').each { f ->
+			echo "Deploying [${f}] to ${nugetUrl}"
+			nuget("push -s ${nugetUrl} -k ${APIKEY} ${WORKSPACE}/${f}")
 	}
 }
 
