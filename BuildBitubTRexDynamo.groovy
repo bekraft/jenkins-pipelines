@@ -46,29 +46,29 @@ node {
 		Utils.nuget('sources list')
 
 		// Cleaning nupkg builds
-		powershell "dotnet clean BitubTRexDynamo.sln -c ${params.buildConfig}"
+		Utils.msbuild("./BitubTRexDynamo.sln /t:clean")
 	}
 
-	if (params.runTests) {
-		stage('Test') {      
-			powershell "dotnet test BitubTRexDynamo.sln -c ${params.buildConfig} -s BitubTRexDynamo.runsettings"
-		}
-	}
-
-   	def propsBuildVersion = Utils.buildVersionToDotNetProp(buildVersion)
+	def propsBuildVersion = Utils.buildVersionToDotNetProp(buildVersion)
 
 	def buildPropsAdditional    
 	if ('Release' != params.buildConfig)
-		buildPropsAdditional = "-p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg"
+		buildPropsAdditional = "/p:IncludeSymbols=true /p:SymbolPackageFormat=snupkg"
 	else
 		buildPropsAdditional = ""
 
-	stage('Build') {       
-		powershell "dotnet build BitubTRexDynamo.sln -c ${params.buildConfig} ${propsBuildVersion} ${buildPropsAdditional} /p:DeployPath=${deployLocalFolder}"
+	stage('Build') {
+		Utils.msbuild("./BitubTRexDynamo.sln /r /t:build /p:Configuration=${params.buildConfig} ${propsBuildVersion} ${buildPropsAdditional}")
    	}
 
+	if (params.runTests) {
+		stage('Test') {
+			Utils.msbuild("./BitubTRexDynamo.sln /r /t:test /p:Configuration=${params.buildConfig} ${propsBuildVersion}")
+		}
+	}   	
+
 	stage('Publish & archive') {
-		powershell "dotnet pack BitubTRexDynamo.sln -c ${params.buildConfig} ${propsBuildVersion} ${buildPropsAdditional} /p:DeployPath=${deployLocalFolder}"
+		powershell "dotnet pack TRexIfc/TRexIfc.csproj -c ${params.buildConfig} ${propsBuildVersion} ${buildPropsAdditional} /p:DeployPath=${deployLocalFolder}"
 		zip zipFile: "TRexDynamo-${packageVersion}.zip", archive : true, dir: deployLocalFolder
 		archiveArtifacts artifacts: '**/*.nupkg, **/*.snupkg', onlyIfSuccessful: true
 	}

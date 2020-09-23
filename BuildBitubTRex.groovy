@@ -53,12 +53,6 @@ node {
 		powershell "dotnet clean BitubTRex.sln -c ${params.buildConfig}"
 	}
 
-	if (params.runTests) {
-		stage('Test') {      
-			powershell "dotnet test BitubTRex.sln -c ${params.buildConfig} -s BitubTRex.runsettings"
-		}
-	}
-
 	def propsBuildVersion = Utils.buildVersionToDotNetProp(buildVersion)
 	def buildPropsAdditional    
 	if ('Release' != params.buildConfig)
@@ -68,6 +62,12 @@ node {
 
 	stage('Build') {       
 		powershell "dotnet build BitubTRex.sln -c ${params.buildConfig} ${propsBuildVersion} ${buildPropsAdditional}"
+	}
+
+	if (params.runTests) {
+		stage('Test') {      
+			powershell "dotnet test BitubTRex.sln -c ${params.buildConfig} -s BitubTRex.runsettings"
+		}
 	}
 
 	stage('Publish & archive') {
