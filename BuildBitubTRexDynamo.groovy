@@ -64,7 +64,7 @@ node {
 
 	if (params.runTests) {
 		stage('Test') {
-			powershell "dotnet test ./TRexIfc.Tests/TRexIfc.Tests.csproj -s ./BitubTRexDynamo.runsettings")
+			powershell "dotnet test ./TRexIfc.Tests/TRexIfc.Tests.csproj -s ./BitubTRexDynamo.runsettings"
 		}
 	}   	
 
