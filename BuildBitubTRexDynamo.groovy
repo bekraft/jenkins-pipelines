@@ -58,12 +58,13 @@ node {
 		buildPropsAdditional = ""
 
 	stage('Build') {
-		Utils.msbuild("./BitubTRexDynamo.sln /r /t:build /p:Configuration=${params.buildConfig} ${propsBuildVersion} ${buildPropsAdditional}")
+		Utils.msbuild("./BitubTRexDynamo.sln /t:restore /p:RestoreSources=${Utils.nugetDeployServerName()}")
+		Utils.msbuild("./BitubTRexDynamo.sln /t:build /p:Configuration=${params.buildConfig} ${propsBuildVersion} ${buildPropsAdditional}")
    	}
 
 	if (params.runTests) {
 		stage('Test') {
-			Utils.msbuild("./BitubTRexDynamo.sln /r /t:test /p:Configuration=${params.buildConfig} ${propsBuildVersion}")
+			Utils.msbuild("./BitubTRexDynamo.sln /t:test /p:Configuration=${params.buildConfig} ${propsBuildVersion}")
 		}
 	}   	
 
