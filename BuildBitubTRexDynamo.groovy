@@ -57,8 +57,8 @@ node {
 	else
 		buildPropsAdditional = ""
 
-	stage('Build') {
-		Utils.msbuild("./BitubTRexDynamo.sln /t:restore")
+	stage('Build') {		
+		Utils.msbuild("./BitubTRexDynamo.sln /t:restore /p:RestoreSources=${NUGET_PRIVATE_URL}")
 		Utils.msbuild("./BitubTRexDynamo.sln /t:build /p:Configuration=${params.buildConfig} ${propsBuildVersion} ${buildPropsAdditional}")
    	}
 
