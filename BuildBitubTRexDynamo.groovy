@@ -14,7 +14,7 @@
 node {
 	checkout scm
 	def Utils = load "Utils.groovy"
-	def deployLocalFolder = 'DeployPackages'
+	def deployLocalFolder = "${WORKSPACE}/DeployedPackages"
 	def buildVersion 
 	def packageVersion   
    
@@ -45,6 +45,9 @@ node {
 		Utils.initEnv()
 		Utils.nuget('sources list')
 
+		// Restore
+		Utils.nuget('restore ./BitubTRexDynamo.sln')
+		
 		// Cleaning nupkg builds
 		Utils.msbuild("./BitubTRexDynamo.sln /t:clean")
 	}
@@ -57,9 +60,9 @@ node {
 	else
 		buildPropsAdditional = ""
 
-	stage('Build') {		
-		Utils.msbuild("./BitubTRexDynamo.sln /t:restore /p:RestoreSources=${NUGET_PRIVATE_URL}")
-		Utils.msbuild("./BitubTRexDynamo.sln /t:build /p:Configuration=${params.buildConfig} ${propsBuildVersion} ${buildPropsAdditional}")
+	stage('Build') {				
+		Utils.msbuild('./BitubTRexDynamo.sln /t:restore')
+		Utils.msbuild("./BitubTRexDynamo.sln /t:build /p:Configuration=${params.buildConfig} /p:DeployPath=${deployLocalFolder} ${propsBuildVersion} ${buildPropsAdditional}")
    	}
 
 	if (params.runTests) {
