@@ -14,6 +14,8 @@ import java.text.SimpleDateFormat
 // - buildMajor (int)
 // - buildMinor (int)
 // - buildPreQualifier (string)
+// - useLocalArtifacts (boolean)
+// - deployArtifacts (boolean)
 
 node {
 	checkout scm
@@ -56,7 +58,11 @@ node {
 		
 		// Restore & update via nuget
 		Utils.initEnv()
-		Utils.enableNugetCache(Utils.nugetDeployServerName())	
+		if (params.useLocalArtifacts) {
+			Utils.enableNugetCache(Utils.nugetDeployServerName())
+		} else {	
+			Utils.disableNugetCache(Utils.nugetDeployServerName())
+		}
 		
 		Utils.nuget('sources list')
 
@@ -99,6 +105,7 @@ node {
 	}
 
 	stage('Publish & archive') {
+		Utils.enableNugetCache(Utils.nugetDeployServerName())
 		if (params.deployArtifacts)
 			Utils.deploy(NUGET_PRIVATE_URL, 'NugetPrivateApiKey')
 

@@ -137,17 +137,25 @@ def removeNugetCache(cacheName, nugetCacheUri) {
 }
 	
 def disableNugetCache(cacheName) {
-	nuget("sources disable -Name \"${cacheName}\"")
+	nuget("sources disable -Name \"${cacheName}\""))
+	echo "Nuget source '${cacheName}' is disabled anyway."
 }
 	
 def enableNugetCache(cacheName) {
-	nuget("sources enable -Name \"${cacheName}\"")
+	if (0 != nuget("sources enable -Name \"${cacheName}\"")) {
+		error "Nuget source '${cacheName}' is yet unknown! Try to add it manually!"
+	} else {
+		echo "Nuget source '${cacheName}' is enabled."
+	}
 }
 
 def addNugetCache(cacheName, nugetCacheUri) {
 	if(0 != nuget("sources update -Name \"${cacheName}\" -Source \"${nugetCacheUri}\"")) {
+		echo "Trying to add '${cacheName}' to nuget sources."
 		if(0 != nuget("sources add -Name \"${cacheName}\" -Source \"${nugetCacheUri}\"")) {
 			error "Could not add ${nugetCacheUri} to nuget repository configuration!"
+		} else {
+			echo "Added successfully '${cacheName}' => '${nugetCacheUri}'."
 		}
 	}
 }
