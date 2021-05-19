@@ -137,7 +137,7 @@ def removeNugetCache(cacheName, nugetCacheUri) {
 }
 	
 def disableNugetCache(cacheName) {
-	nuget("sources disable -Name \"${cacheName}\""))
+	nuget("sources disable -Name \"${cacheName}\"")
 	echo "Nuget source '${cacheName}' is disabled anyway."
 }
 	
