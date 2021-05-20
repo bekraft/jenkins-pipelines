@@ -19,7 +19,7 @@ def nugetDeployServerName() {
 
 def initEnv() {
 	addNugetCache(nugetDeployServerName(), "${NUGET_PRIVATE_URL}")
-	//nuget("config -set repositoryPath=${LOCAL_NUGET_CACHE}")
+	nuget("config -set repositoryPath=${LOCAL_NUGET_CACHE}")
 }
 
 def generateSnapshotVersion(majorVersion, minorVersion, buildQualifier = null) {
