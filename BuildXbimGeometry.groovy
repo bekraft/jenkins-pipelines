@@ -2,6 +2,7 @@
 // based on azure-pipelines.yml configuration (https://github.com/xBimTeam/XbimGeometry/blob/master/azure-pipelines.yml)
 
 // Env:
+// - NUGET_PRIVATE_URL
 // - LOCAL_NUGET_CACHE
 
 // Parameters:
@@ -15,13 +16,15 @@
 // - doCleanBuild (boolean)
 // - buildPreQualifier (string)
 // - useLocalArtifacts (boolean)
+// - deployArtifacts (boolean)
 
 node {
    checkout scm
    def Utils = load "Utils.groovy"
    def buildVersion
-   def packageVersion   
-   
+   def packageVersion
+   def localPackageFolder = "${WORKSPACE}/deployedpackages"
+
    stage('Clean up') {
        if(params.doCleanUpWs) {
          cleanWs()
@@ -52,12 +55,13 @@ node {
       //powershell "dotnet clean Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj -c ${params.buildConfig}"
       //powershell "dotnet clean Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj -c ${params.buildConfig}"
 
-      // Restore & update via nuget
-      Utils.initEnv()
-      if(params.useLocalArtifacts)
-         Utils.enableNugetCache(Utils.localNugetCacheName())
-      else
-         Utils.disableNugetCache(Utils.localNugetCacheName())
+		// Restore & update via nuget
+		Utils.initEnv()
+		if (params.useLocalArtifacts) {
+			Utils.enableNugetCache(Utils.nugetDeployServerName())
+		} else {	
+			Utils.disableNugetCache(Utils.nugetDeployServerName())
+		}
                   
       Utils.nuget('sources list')
       
@@ -96,4 +100,12 @@ node {
        powershell "dotnet pack Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj -c ${params.buildConfig} -o ${prebuiltPckgPath} /p:PackageVersion=${packageVersion}"
        powershell "dotnet pack Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj -c ${params.buildConfig} -o ${prebuiltPckgPath} /p:PackageVersion=${packageVersion}"
    }
+
+	stage('Publish & archive') {
+		Utils.enableNugetCache(Utils.nugetDeployServerName())
+		if (params.deployArtifacts)
+			Utils.deploy(NUGET_PRIVATE_URL, 'NugetPrivateApiKey')
+
+		archiveArtifacts artifacts: '**/*.nupkg, **/*.snupkg', onlyIfSuccessful: true
+	}
 }
