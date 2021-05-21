@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat
 
 // Env:
 // - NUGET_PRIVATE_URL
+// - LOCAL_NUGET_CACHE
 
 // Parameters:
 // - doCleanUpWs (boolean)
