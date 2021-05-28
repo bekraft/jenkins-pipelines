@@ -17,9 +17,13 @@ def nugetDeployServerName() {
 	return "nugetDeployServer"
 }
 
-def initEnv() {
-	addNugetCache(nugetDeployServerName(), "${NUGET_PRIVATE_URL}")
-	nuget("config -set repositoryPath=${LOCAL_NUGET_CACHE}")
+def initEnv(configFile = null) {
+	def cfOption = ""
+	if (configFile)
+		cfOption = " -ConfigFile \"${configFile}\""
+
+	addNugetCache(nugetDeployServerName(), "${NUGET_PRIVATE_URL}", configFile)
+	nuget("config -set repositoryPath=${LOCAL_NUGET_CACHE} ${cfOption}")
 }
 
 def generateSnapshotVersion(majorVersion, minorVersion, buildQualifier = null) {
@@ -132,27 +136,42 @@ def deployToNugetLocalCache(nugetCachePath) {
 	}
 }
 
-def removeNugetCache(cacheName, nugetCacheUri) {
-	nuget("sources remove -Name \"${cacheName}\" -Source \"${nugetCacheUri}\"")
+def removeNugetCache(cacheName, nugetCacheUri, configFile = null) {
+	def cfOption = ""
+	if (configFile)
+		cfOption = " -ConfigFile \"${configFile}\""
+
+	nuget("sources remove -Name \"${cacheName}\" -Source \"${nugetCacheUri}\" ${cfOption}")
 }
 	
-def disableNugetCache(cacheName) {
-	nuget("sources disable -Name \"${cacheName}\"")
+def disableNugetCache(cacheName, configFile = null) {
+	def cfOption = ""
+	if (configFile)
+		cfOption = " -ConfigFile \"${configFile}\""
+
+	nuget("sources disable -Name \"${cacheName}\" ${cfOption}")
 	echo "Nuget source '${cacheName}' is disabled anyway."
 }
 	
-def enableNugetCache(cacheName) {
-	if (0 != nuget("sources enable -Name \"${cacheName}\"")) {
+def enableNugetCache(cacheName, configFile = null) {
+	def cfOption = ""
+	if (configFile)
+		cfOption = " -ConfigFile \"${configFile}\""
+
+	if (0 != nuget("sources enable -Name \"${cacheName}\" ${cfOption}")) {
 		error "Nuget source '${cacheName}' is yet unknown! Try to add it manually!"
 	} else {
 		echo "Nuget source '${cacheName}' is enabled."
 	}
 }
 
-def addNugetCache(cacheName, nugetCacheUri) {
-	if(0 != nuget("sources update -Name \"${cacheName}\" -Source \"${nugetCacheUri}\"")) {
+def addNugetCache(cacheName, nugetCacheUri, configFile = null) {
+	def cfOption = ""
+	if (configFile)
+		cfOption = "-ConfigFile \"${configFile}\""
+	if (0 != nuget("sources update -Name \"${cacheName}\" -Source \"${nugetCacheUri}\" ${cfOption}")) {
 		echo "Trying to add '${cacheName}' to nuget sources."
-		if(0 != nuget("sources add -Name \"${cacheName}\" -Source \"${nugetCacheUri}\"")) {
+		if(0 != nuget("sources add -Name \"${cacheName}\" -Source \"${nugetCacheUri}\" ${cfOption}")) {
 			error "Could not add ${nugetCacheUri} to nuget repository configuration!"
 		} else {
 			echo "Added successfully '${cacheName}' => '${nugetCacheUri}'."

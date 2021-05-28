@@ -63,14 +63,15 @@ node {
       //powershell "dotnet clean Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj -c ${params.buildConfig}"
 
 		// Restore & update via nuget
-		Utils.initEnv()
+		Utils.initEnv("nuget.config")
 		if (params.useLocalArtifacts) {
 			Utils.enableNugetCache(Utils.nugetDeployServerName())
+         Utils.enableNugetCache(Utils.nugetDeployServerName(), "nuget.config")
 		} else {	
 			Utils.disableNugetCache(Utils.nugetDeployServerName())
 		}
                   
-      Utils.nuget('sources list')
+      Utils.nuget('sources list -ConfigFile nuget.config')
       
       // Remove project not needed
       powershell "dotnet sln ./Xbim.Geometry.Engine.sln remove ./Xbim.Geometry.Regression/XbimRegression.csproj"
