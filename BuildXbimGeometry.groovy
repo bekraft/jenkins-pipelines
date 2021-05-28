@@ -21,15 +21,22 @@
 node {
    checkout scm
    def Utils = load "Utils.groovy"
+   def localPackageFolder = "${WORKSPACE}/deployedpackages"
+   def buildProps
    def buildVersion
    def packageVersion
-   def localPackageFolder = "${WORKSPACE}/deployedpackages"
+
+   if ('Release' != params.buildConfig)
+		buildProps = "-p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg"
+	else
+		buildProps = ""
 
    stage('Clean up') {
        if(params.doCleanUpWs) {
          cleanWs()
        } else {
          Utils.git('reset --hard')
+         Utils.git('clean -fd')
        }
    }
    
@@ -97,15 +104,15 @@ node {
        }
        
        // Pack nuget packages
-       powershell "dotnet pack Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj -c ${params.buildConfig} -o ${prebuiltPckgPath} /p:PackageVersion=${packageVersion}"
-       powershell "dotnet pack Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj -c ${params.buildConfig} -o ${prebuiltPckgPath} /p:PackageVersion=${packageVersion}"
+       powershell "dotnet pack Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj -c ${params.buildConfig} -o ${localPackageFolder} ${buildProps} /p:PackageVersion=${packageVersion}"
+       powershell "dotnet pack Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj -c ${params.buildConfig} -o ${localPackageFolder} ${buildProps} /p:PackageVersion=${packageVersion}"
    }
 
 	stage('Publish & archive') {
 		Utils.enableNugetCache(Utils.nugetDeployServerName())
-		if (params.deployArtifacts)
+		if (params.deployArtifacts) {
 			Utils.deploy(NUGET_PRIVATE_URL, 'NugetPrivateApiKey')
-
+      }
 		archiveArtifacts artifacts: '**/*.nupkg, **/*.snupkg', onlyIfSuccessful: true
 	}
 }
