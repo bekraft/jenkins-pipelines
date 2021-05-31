@@ -14,16 +14,15 @@
 node {
    checkout scm
    def Utils = load "Utils.groovy"
-   def buildVersion 
-   if('Release' == params.buildConfig) {
-      buildVersion = Utils.generateBuildVersion(params.buildMajor, params.buildMinor, params.buildPreQualifier)
-   } else {
-      buildVersion = Utils.generateSnapshotVersion(params.buildMajor, params.buildMinor, params.buildPreQualifier)
-   }
+   def prebuiltPckgPath = "${WORKSPACE}/${params.buildConfig}/nuget"
+   def buildProps
+   def buildVersion
+   def packageVersion
 
-   def packageVersion = Utils.generatePackageVersion(buildVersion)
-   echo "Building package version ${packageVersion}"
-   currentBuild.displayName = "#${BUILD_NUMBER} (${packageVersion})"
+   if ('Release' != params.buildConfig)
+		buildProps = "-p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg"
+	else
+		buildProps = ""
    
    stage('Clean up') {
        if(params.doCleanUpWs) {
@@ -36,6 +35,16 @@ node {
    
    stage('Git Checkout') { // for display purposes
       git branch: "${params.xbimBranch}", url: "${params.xbimRepository}" 
+
+      if('Release' == params.buildConfig) {
+         buildVersion = Utils.generateBuildVersion(params.buildMajor, params.buildMinor, params.buildPreQualifier)
+      } else {
+         buildVersion = Utils.generateSnapshotVersion(params.buildMajor, params.buildMinor, params.buildPreQualifier)
+      }
+
+      packageVersion = Utils.generatePackageVersion(buildVersion)
+      echo "Building package version ${packageVersion}"
+      currentBuild.displayName = "#${BUILD_NUMBER} (${packageVersion})"
    }
    
    stage('Preparation') {
@@ -46,9 +55,16 @@ node {
       powershell "dotnet clean Xbim.Presentation/Xbim.Presentation.csproj -c ${params.buildConfig}"
       powershell "dotnet clean XbimXplorer/XbimXplorer.csproj -c ${params.buildConfig}"
 
-      // Restore & update via nuget
-      Utils.initEnv()      
-      Utils.nuget('sources list')
+		// Restore & update via nuget
+		Utils.initEnv("nuget.config")
+		if (params.useLocalArtifacts) {
+			Utils.enableNugetCache(Utils.nugetDeployServerName())
+         Utils.enableNugetCache(Utils.nugetDeployServerName(), "nuget.config")
+		} else {	
+			Utils.disableNugetCache(Utils.nugetDeployServerName())
+		}
+                  
+      Utils.nuget('sources list -ConfigFile nuget.config')
 
       if(params.doUpdatePackages) {
           // Update all packages
@@ -60,11 +76,10 @@ node {
 
       // Restore entire solution dependencies invoking nuget and msbuild
       Utils.nuget('restore Xbim.WindowsUI.sln')
-      Utils.msbuild("./Xbim.WindowsUI.sln /t:restore /p:RestoreSources=${params.localNugetStore}")
+      Utils.msbuild("./Xbim.WindowsUI.sln /t:restore")
    }
 
    stage('Build') {
-       def prebuiltPckgPath = "${WORKSPACE}/${params.buildConfig}"
        // Pack nuget packages
        powershell "dotnet pack Xbim.Presentation/Xbim.Presentation.csproj -c ${params.buildConfig} -o ${prebuiltPckgPath} /p:PackageVersion=${packageVersion}"
        powershell "dotnet remove XbimXplorer/XbimXplorer.csproj reference ../Xbim.Presentation/Xbim.Presentation.csproj"
@@ -72,7 +87,15 @@ node {
        powershell "dotnet msbuild XbimXplorer/XbimXplorer.csproj -c ${params.buildConfig} -o ${params.buildConfig} /p:PackageVersion=${packageVersion}"
    }
 
-   stage('Archive XbimXplorer') {
+	stage('Publish & archive packages') {
+		Utils.enableNugetCache(Utils.nugetDeployServerName())
+		if (params.deployArtifacts) {
+			Utils.deploy(NUGET_PRIVATE_URL, 'NugetPrivateApiKey')
+      }
+		archiveArtifacts artifacts: '**/*.nupkg, **/*.snupkg', onlyIfSuccessful: true
+	}
+
+   stage('Archive XbimXplorer build') {
       archiveArtifacts artifacts: "XbimXplorer/${params.buildConfig}"
    }
 }

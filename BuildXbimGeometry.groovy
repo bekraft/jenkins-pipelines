@@ -59,8 +59,8 @@ node {
       Utils.cleanUpNupkgs()
 
       // Cleaning nupkg builds
-      //powershell "dotnet clean Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj -c ${params.buildConfig}"
-      //powershell "dotnet clean Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj -c ${params.buildConfig}"
+      // Not using: powershell "dotnet clean Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj -c ${params.buildConfig}"
+      // Not using: powershell "dotnet clean Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj -c ${params.buildConfig}"
 
 		// Restore & update via nuget
 		Utils.initEnv("nuget.config")
@@ -85,8 +85,9 @@ node {
       Utils.updatePackages([], '^(Xbim).*')
 
       // Restore entire solution dependencies invoking nuget and msbuild
-      //Utils.nuget('restore Xbim.Geometry.Engine.sln')
-      Utils.msbuild("./Xbim.Geometry.Engine.sln /t:restore /p:RestoreSources=${LOCAL_NUGET_CACHE}")
+      // Not using: Utils.nuget('restore Xbim.Geometry.Engine.sln')
+      // Not using: Utils.msbuild("./Xbim.Geometry.Engine.sln /t:restore /p:RestoreSources=${LOCAL_NUGET_CACHE}")
+      Utils.msbuild("./Xbim.Geometry.Engine.sln /t:restore")
 
       // Replace versions native engine version identifiers
       powershell "((Get-Content -path Xbim.Geometry.Engine\\app.rc -Raw) -replace '\"FileVersion\", \"${buildVersion.major}.${buildVersion.minor}.0.0\"','\"FileVersion\", \"${buildVersion.major}.${buildVersion.minor}.${buildVersion.release}.${buildVersion.build}\"') | Set-Content -Path Xbim.Geometry.Engine\\app.rc" 
@@ -98,9 +99,9 @@ node {
        for(platform in ['x86','x64']) {
           for(target in (params.doCleanBuild ? ['clean', 'build'] : ['build'])) {
              Utils.msbuild("./Xbim.Geometry.Engine.sln /r /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")             
-             //Utils.msbuild("./Xbim.Geometry.Engine/Xbim.Geometry.Engine.vcxproj /r /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")
-             //Utils.msbuild("./Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj /r /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")
-             //Utils.msbuild("./Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj /r /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")
+             // Not using: Utils.msbuild("./Xbim.Geometry.Engine/Xbim.Geometry.Engine.vcxproj /r /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")
+             // Not using: Utils.msbuild("./Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj /r /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")
+             // Not using: Utils.msbuild("./Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj /r /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")
           }
        }
        
