@@ -22,14 +22,14 @@ node {
    checkout scm
    def Utils = load "Utils.groovy"
    def localPackageFolder = "${WORKSPACE}/deployedpackages"
-   def buildProps
+   def buildPropsAdditionals
    def buildVersion
    def packageVersion
 
    if ('Release' != params.buildConfig)
-		buildProps = "-p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg"
+		buildPropsAdditionals = "-p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg"
 	else
-		buildProps = ""
+		buildPropsAdditionals = ""
 
    stage('Clean up') {
        if(params.doCleanUpWs) {
@@ -70,6 +70,7 @@ node {
       
       // Remove project not needed
       powershell "dotnet sln ./Xbim.Geometry.Engine.sln remove ./Xbim.Geometry.Regression/XbimRegression.csproj"
+      powershell "dotnet sln ./Xbim.Geometry.Engine.sln remove ./Xbim.Geometry.Engine.Interop.Tests/Xbim.Geometry.Engine.Interop.Tests.csproj"
       
       if(params.doUpdatePackages) {
           // Update all packages
@@ -80,8 +81,6 @@ node {
       Utils.updatePackages([], '^(Xbim).*')
 
       // Restore entire solution dependencies invoking nuget and msbuild
-      // Not using: Utils.nuget('restore Xbim.Geometry.Engine.sln')
-      // Not using: Utils.msbuild("./Xbim.Geometry.Engine.sln /t:restore /p:RestoreSources=${LOCAL_NUGET_CACHE}")
       Utils.msbuild("./Xbim.Geometry.Engine.sln /t:restore")
 
       // Replace versions native engine version identifiers
@@ -90,16 +89,18 @@ node {
    }
 
    stage('Build') {
+       def buildProps = "/p:PackageVersion=${packageVersion} /p:GeneratePackageOnBuild=false ${buildPropsAdditionals}"
+
        // Build for both platforms
        for(platform in ['Any CPU']) {
           for(target in (params.doCleanBuild ? ['clean', 'build'] : ['build'])) {
-             Utils.msbuild("./Xbim.Geometry.Engine.sln /r /t:${target} /p:Configuration=\"${params.buildConfig}\" /p:Platform=\"${platform}\" /p:GeneratePackageOnBuild=false ${buildProps}")
+             Utils.msbuild("./Xbim.Geometry.Engine.sln /r /t:${target} /p:Configuration=\"${params.buildConfig}\" /p:Platform=\"${platform}\" ${buildProps}")
           }
        }
        
        // Pack nuget packages
-       powershell "dotnet pack Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj -c ${params.buildConfig} -o ${localPackageFolder} ${buildProps} /p:PackageVersion=${packageVersion}"
-       powershell "dotnet pack Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj -c ${params.buildConfig} -o ${localPackageFolder} ${buildProps} /p:PackageVersion=${packageVersion}"
+       powershell "dotnet pack Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj -c ${params.buildConfig} -o ${localPackageFolder} ${buildProps}"
+       powershell "dotnet pack Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj -c ${params.buildConfig} -o ${localPackageFolder} ${buildProps}"
    }
 
 	stage('Publish & archive') {
