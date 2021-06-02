@@ -36,7 +36,6 @@ node {
          cleanWs()
        } else {
          Utils.git('reset --hard')
-         Utils.git('clean -fd')
        }
    }
    
@@ -57,10 +56,6 @@ node {
    stage('Preparation') {
       // Clean up old binary packages
       Utils.cleanUpNupkgs()
-
-      // Cleaning nupkg builds
-      // Not using: powershell "dotnet clean Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj -c ${params.buildConfig}"
-      // Not using: powershell "dotnet clean Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj -c ${params.buildConfig}"
 
 		// Restore & update via nuget
 		Utils.initEnv("nuget.config")
@@ -96,12 +91,9 @@ node {
 
    stage('Build') {
        // Build for both platforms
-       for(platform in ['x86','x64']) {
+       for(platform in ['Any CPU']) {
           for(target in (params.doCleanBuild ? ['clean', 'build'] : ['build'])) {
-             Utils.msbuild("./Xbim.Geometry.Engine.sln /r /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")             
-             // Not using: Utils.msbuild("./Xbim.Geometry.Engine/Xbim.Geometry.Engine.vcxproj /r /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")
-             // Not using: Utils.msbuild("./Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj /r /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")
-             // Not using: Utils.msbuild("./Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj /r /t:${target} /p:Configuration=${params.buildConfig} /p:Platform=${platform}")
+             Utils.msbuild("./Xbim.Geometry.Engine.sln /r /t:${target} /p:Configuration=\"${params.buildConfig}\" /p:Platform=\"${platform}\" /p:GeneratePackageOnBuild=false ${buildProps}")
           }
        }
        
