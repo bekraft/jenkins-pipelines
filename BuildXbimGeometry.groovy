@@ -84,12 +84,15 @@ node {
       Utils.msbuild("./Xbim.Geometry.Engine.sln /t:restore")
 
       // Replace versions native engine version identifiers
-      powershell "((Get-Content -path Xbim.Geometry.Engine\\app.rc -Raw) -replace '\"FileVersion\", \"${buildVersion.major}.${buildVersion.minor}.0.0\"','\"FileVersion\", \"${buildVersion.major}.${buildVersion.minor}.${buildVersion.release}.${buildVersion.build}\"') | Set-Content -Path Xbim.Geometry.Engine\\app.rc" 
-      powershell "((Get-Content -path Xbim.Geometry.Engine\\app.rc -Raw) -replace 'FILEVERSION ${buildVersion.major},${buildVersion.minor},0,0','FILEVERSION ${buildVersion.major},${buildVersion.minor},${buildVersion.release},${buildVersion.build}') | Set-Content -Path Xbim.Geometry.Engine\\app.rc" 
+      for(attr in ['FileVersion', 'FILEVERSION', 'ProductVersion', 'PRODUCTVERSION']) {
+         powershell "((Get-Content -path Xbim.Geometry.Engine\\app.rc -Raw) -replace '\"${attr}\", \"${buildVersion.major}.${buildVersion.minor}.0.0\"','\"FileVersion\", \"${buildVersion.major}.${buildVersion.minor}.${buildVersion.release}.${buildVersion.build}\"') | Set-Content -Path Xbim.Geometry.Engine\\app.rc" 
+         powershell "((Get-Content -path Xbim.Geometry.Engine\\app.rc -Raw) -replace '${attr} ${buildVersion.major},${buildVersion.minor},0,0','FILEVERSION ${buildVersion.major},${buildVersion.minor},${buildVersion.release},${buildVersion.build}') | Set-Content -Path Xbim.Geometry.Engine\\app.rc" 
+      }
    }
 
    stage('Build') {
-       def buildProps = "/p:PackageVersion=${packageVersion} /p:GeneratePackageOnBuild=false ${buildPropsAdditionals}"
+       def assemblyVersion = Utils.generaterAssemblyVersion(buildVersion)
+       def buildProps = "/p:PackageVersion=${packageVersion} /p:Version=${assemblyVersion} /p:AssemblyVersion=${assemblyVersion} /p:GeneratePackageOnBuild=false ${buildPropsAdditionals}"
 
        // Build for both platforms
        for(platform in ['Any CPU']) {

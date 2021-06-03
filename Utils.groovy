@@ -179,6 +179,20 @@ def addNugetCache(cacheName, nugetCacheUri, configFile = null) {
 	}
 }
 
+def readSolutionProjects(f) {
+	def references = readFile("${f}") =~ '(?!Project)\("([^"]*)"\)\s*=\s*"([^"]*)"\s*,\s*"([^"]*)"'
+	def projects = references.collect {
+		[
+			id: it[1],
+			name: it[2],
+			folder: it[3]
+		]
+	}
+	// Avoid CPS exception
+	references = null
+	return projects
+}
+
 def readPackageVersion(f) {
 	def packages = readFile("${f}") =~ 'PackageReference Include="([^"]*)" Version="([^"]*)"'
 	def packageVersion = packages.collect {
@@ -194,13 +208,13 @@ def readPackageVersion(f) {
 
 // See https://gist.github.com/JonCanning/a083e80c53eb68fac32fe1bfe8e63c48
 def updatePackages(packageIdentifiers, regexPackageId = '.*') {
-	echo "Start package updates using ${packageIdentifiers} and matching expression [${regexPackageId}]"
+	echo "Start package updates using ${packageIdentifiers} and matching expression [${regexPackageId}]."
 	def idset = packageIdentifiers.toSet()
 
 	// Visit all project files
 	findFiles(glob:'**/*.*proj').each { f ->
 		def packages = readPackageVersion(f)
-		echo "Found project [${f}] having ${packages.size()} reference(s) in total."
+		echo "Scanning project \"${f}\" (${packages.size()} reference(s))."
 		packages.each { pkg ->
 			// Test ID match
 			def m = (pkg.id =~ regexPackageId)
@@ -208,10 +222,10 @@ def updatePackages(packageIdentifiers, regexPackageId = '.*') {
 			// Avoid CPS
 			m = null
 			if(idset.contains(pkg.id) || isIdMatch) {
-				echo "- Found match for package  ${pkg.id} (${pkg.version.empty ? 'latest' : pkg.version})"
+				echo "Updating reference \"${pkg.id}\" [${pkg.version.empty ? 'latest' : pkg.version}]."
 				if(!pkg.version.empty) {
 					// Only if a given version exists
-					powershell "dotnet add ${f} package ${pkg.id}"
+					powershell "dotnet add ${f} package ${pkg.id} --verbosity quiet"
 				}
 			}
 		}
