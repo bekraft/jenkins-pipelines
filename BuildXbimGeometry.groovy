@@ -71,7 +71,11 @@ node {
       // Remove project not needed
       powershell "dotnet sln ./Xbim.Geometry.Engine.sln remove ./Xbim.Geometry.Regression/XbimRegression.csproj"
       powershell "dotnet sln ./Xbim.Geometry.Engine.sln remove ./Xbim.Geometry.Engine.Interop.Tests/Xbim.Geometry.Engine.Interop.Tests.csproj"
-      
+      def prjs = readSolutionProjects('./Xbim.Geometry.Engine.sln')
+      for (prj in prjs) {
+         echo prj.folder
+      }
+
       if(params.doUpdatePackages) {
           // Update all packages
           Utils.nuget('update ./Xbim.Geometry.Engine.sln')

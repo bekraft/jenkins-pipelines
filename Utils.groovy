@@ -180,7 +180,7 @@ def addNugetCache(cacheName, nugetCacheUri, configFile = null) {
 }
 
 def readSolutionProjects(f) {
-	def references = readFile("${f}") =~ '(?!Project)\("([^"]*)"\)\s*=\s*"([^"]*)"\s*,\s*"([^"]*)"'
+	def references = readFile("${f}") =~ '(?!Project)\\("([^"]*)"\\)\\s*=\\s*"([^"]*)"\\s*,\\s*"([^"]*)"'
 	def projects = references.collect {
 		[
 			id: it[1],
