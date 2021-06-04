@@ -72,9 +72,6 @@ node {
       powershell "dotnet sln ./Xbim.Geometry.Engine.sln remove ./Xbim.Geometry.Regression/XbimRegression.csproj"
       powershell "dotnet sln ./Xbim.Geometry.Engine.sln remove ./Xbim.Geometry.Engine.Interop.Tests/Xbim.Geometry.Engine.Interop.Tests.csproj"
       def prjs = Utils.readSolutionProjects('./Xbim.Geometry.Engine.sln')
-      for (prj in prjs) {
-         echo prj.folder
-      }
 
       if(params.doUpdatePackages) {
           // Update all packages
@@ -82,8 +79,8 @@ node {
       }
 
       // Update Xbim packages (Xbim.Ifc, Xbim.Tesselator, ...?)
-      Utils.updatePackages([], '^(Xbim).*')
-
+      //Utils.update(prjs.collect{ it.folder }, [], '^(Xbim).*')
+      Utils.updateFromDirectory([], '^(Xbim).*')
       // Restore entire solution dependencies invoking nuget and msbuild
       Utils.msbuild("./Xbim.Geometry.Engine.sln /t:restore")
 

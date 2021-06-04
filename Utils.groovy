@@ -206,13 +206,18 @@ def readPackageVersion(f) {
 	return packageVersion
 }
 
+// Starts searching for project files at the current working directory
+def updateFromDirectory(packageIdentifiers, regexPackageId = '.*') {
+	update(findFiles(glob:'**/*.*proj'), packageIdentifiers, regexPackageId)
+}
+
 // See https://gist.github.com/JonCanning/a083e80c53eb68fac32fe1bfe8e63c48
-def updatePackages(packageIdentifiers, regexPackageId = '.*') {
+def update(projectFiles, packageIdentifiers, regexPackageId = '.*') {
 	echo "Start package updates using ${packageIdentifiers} and matching expression [${regexPackageId}]."
 	def idset = packageIdentifiers.toSet()
 
 	// Visit all project files
-	findFiles(glob:'**/*.*proj').each { f ->
+	projectFiles.each { f ->
 		def packages = readPackageVersion(f)
 		echo "Scanning project \"${f}\" (${packages.size()} reference(s))."
 		packages.each { pkg ->
@@ -225,7 +230,7 @@ def updatePackages(packageIdentifiers, regexPackageId = '.*') {
 				echo "Updating reference \"${pkg.id}\" [${pkg.version.empty ? 'latest' : pkg.version}]."
 				if(!pkg.version.empty) {
 					// Only if a given version exists
-					powershell "dotnet add ${f} package ${pkg.id} --verbosity quiet"
+					powershell "dotnet add ${f} package ${pkg.id}"
 				}
 			}
 		}
