@@ -1,7 +1,6 @@
 // Utils.groovy
 import java.text.SimpleDateFormat
 import hudson.plugins.git.GitTool
-import java.nio.file.Paths
 
 // Env
 // - NUGET_PRIVATE_URL .. URL to private Nuget deploy server
@@ -214,9 +213,13 @@ def updatePackagesFromDirectory(packageIdentifiers, regexPackageId = '.*') {
 
 // Updates all packages from reachable projects of solution
 def updatePackagesFromSolution(slnFileName, packageIdentifiers, regexPackageId = '.*') {
-	def slnDirectory = new File(slnFileName).getParentFile().getName()
+	def pathSepIndex = slnFileName.lastIndexOf('/')
+	if (0 > pathSepIndex)
+		pathSepIndex = slnFileName.lastIndexOf('\\')
+
+	def slnDirectory = slnFileName.subString(0, pathSepIndex + 1)
 	updatePackages(
-		readSolutionProjects(slnFileName).collect { it.folder.trim() }.findAll { it.endsWith('proj') }.collect { Paths.get(slnDirectory, it) },
+		readSolutionProjects(slnFileName).collect { it.folder.trim() }.findAll { it.endsWith('proj') }.collect { slnDirectory + it },
 		packageIdentifiers,
 		regexPackageId)
 }
