@@ -217,7 +217,7 @@ def updatePackagesFromSolution(slnFileName, packageIdentifiers, regexPackageId =
 	if (0 > pathSepIndex)
 		pathSepIndex = slnFileName.lastIndexOf('\\')
 
-	def slnDirectory = slnFileName.subString(0, pathSepIndex + 1)
+	def slnDirectory = slnFileName.substring(0, pathSepIndex + 1)
 	updatePackages(
 		readSolutionProjects(slnFileName).collect { it.folder.trim() }.findAll { it.endsWith('proj') }.collect { slnDirectory + it },
 		packageIdentifiers,
