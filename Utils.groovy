@@ -1,6 +1,7 @@
 // Utils.groovy
 import java.text.SimpleDateFormat
 import hudson.plugins.git.GitTool
+import java.nio.file.Paths
 
 // Env
 // - NUGET_PRIVATE_URL .. URL to private Nuget deploy server
@@ -207,19 +208,28 @@ def readPackageVersion(f) {
 }
 
 // Starts searching for project files at the current working directory
-def updateFromDirectory(packageIdentifiers, regexPackageId = '.*') {
+def updatePackagesFromDirectory(packageIdentifiers, regexPackageId = '.*') {
 	update(findFiles(glob:'**/*.*proj'), packageIdentifiers, regexPackageId)
 }
 
+// Updates all packages from reachable projects of solution
+def updatePackagesFromSolution(slnFileName, packageIdentifiers, regexPackageId = '.*') {
+	def slnDirectory = new File(slnFileName).getParentFile().getName()
+	updatePackages(
+		readSolutionProjects(slnFileName).collect { it.folder.trim() }.findAll { it.endsWith('proj') }.collect { Paths.get(slnDirectory, it) },
+		packageIdentifiers,
+		regexPackageId)
+}
+
 // See https://gist.github.com/JonCanning/a083e80c53eb68fac32fe1bfe8e63c48
-def update(projectFiles, packageIdentifiers, regexPackageId = '.*') {
+def updatePackages(projectFiles, packageIdentifiers, regexPackageId = '.*') {
 	echo "Start package updates using ${packageIdentifiers} and matching expression [${regexPackageId}]."
 	def idset = packageIdentifiers.toSet()
 
 	// Visit all project files
 	projectFiles.each { f ->
 		def packages = readPackageVersion(f)
-		echo "Scanning project \"${f}\" (${packages.size()} reference(s))."
+		echo "Project \"${f}\": ${packages.size()} referenced package(s)."
 		packages.each { pkg ->
 			// Test ID match
 			def m = (pkg.id =~ regexPackageId)

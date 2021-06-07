@@ -21,7 +21,7 @@
 node {
    checkout scm
    def Utils = load "Utils.groovy"
-   def localPackageFolder = "${WORKSPACE}/deployedpackages"
+   def localPackageFolder = "${WORKSPACE}/${params.buildConfig}"
    def buildPropsAdditionals
    def buildVersion
    def packageVersion
@@ -79,8 +79,7 @@ node {
       }
 
       // Update Xbim packages (Xbim.Ifc, Xbim.Tesselator, ...?)
-      //Utils.update(prjs.collect{ it.folder }, [], '^(Xbim).*')
-      Utils.updateFromDirectory([], '^(Xbim).*')
+      Utils.updatePackagesFromSolution('./Xbim.Geometry.Engine.sln', [], '^(Xbim).*')
       // Restore entire solution dependencies invoking nuget and msbuild
       Utils.msbuild("./Xbim.Geometry.Engine.sln /t:restore")
 
