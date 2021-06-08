@@ -35,7 +35,7 @@ node {
        if(params.doCleanUpWs) {
          cleanWs()
        } else {
-         Utils.git('reset --hard')
+         Utils.git('reset --hard')         
        }
    }
    
@@ -85,25 +85,25 @@ node {
 
       // Replace versions native engine version identifiers
       for(attr in ['FileVersion', 'FILEVERSION', 'ProductVersion', 'PRODUCTVERSION']) {
-         powershell "((Get-Content -path Xbim.Geometry.Engine\\app.rc -Raw) -replace '\"${attr}\", \"${buildVersion.major}.${buildVersion.minor}.0.0\"','\"FileVersion\", \"${buildVersion.major}.${buildVersion.minor}.${buildVersion.release}.${buildVersion.build}\"') | Set-Content -Path Xbim.Geometry.Engine\\app.rc" 
-         powershell "((Get-Content -path Xbim.Geometry.Engine\\app.rc -Raw) -replace '${attr} ${buildVersion.major},${buildVersion.minor},0,0','FILEVERSION ${buildVersion.major},${buildVersion.minor},${buildVersion.release},${buildVersion.build}') | Set-Content -Path Xbim.Geometry.Engine\\app.rc" 
+         powershell "((Get-Content -path Xbim.Geometry.Engine\\app.rc -Raw) -replace '\"${attr}\", \"${buildVersion.major}.${buildVersion.minor}.0.0\"','\"${attr}\", \"${buildVersion.major}.${buildVersion.minor}.${buildVersion.release}.${buildVersion.build}\"') | Set-Content -Path Xbim.Geometry.Engine\\app.rc" 
+         powershell "((Get-Content -path Xbim.Geometry.Engine\\app.rc -Raw) -replace '${attr} ${buildVersion.major},${buildVersion.minor},0,0','${attr} ${buildVersion.major},${buildVersion.minor},${buildVersion.release},${buildVersion.build}') | Set-Content -Path Xbim.Geometry.Engine\\app.rc" 
       }
    }
 
    stage('Build') {
        def assemblyVersion = Utils.generaterAssemblyVersion(buildVersion)
-       def buildProps = "/p:PackageVersion=${packageVersion} /p:Version=${assemblyVersion} /p:AssemblyVersion=${assemblyVersion} /p:GeneratePackageOnBuild=false ${buildPropsAdditionals}"
+       def buildProps = "/p:PackageVersion=${packageVersion} /p:Version=${assemblyVersion} /p:AssemblyVersion=${assemblyVersion} ${buildPropsAdditionals}"
 
        // Build for both platforms
        for(platform in ['Any CPU']) {
           for(target in (params.doCleanBuild ? ['clean', 'build'] : ['build'])) {
-             Utils.msbuild("./Xbim.Geometry.Engine.sln /r /t:${target} /p:Configuration=\"${params.buildConfig}\" /p:Platform=\"${platform}\" ${buildProps}")
+             Utils.msbuild("./Xbim.Geometry.Engine.sln /r /t:${target} /p:Configuration=\"${params.buildConfig}\" /p:Platform=\"${platform}\" ${buildProps} /p:GeneratePackageOnBuild=false")
           }
        }
        
        // Pack nuget packages
-       powershell "dotnet pack Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj -c ${params.buildConfig} -o ${localPackageFolder} ${buildProps}"
-       powershell "dotnet pack Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj -c ${params.buildConfig} -o ${localPackageFolder} ${buildProps}"
+       powershell "dotnet pack Xbim.Geometry.Engine.Interop/Xbim.Geometry.Engine.Interop.csproj --no-build -c ${params.buildConfig} -o ${localPackageFolder} ${buildProps}"
+       powershell "dotnet pack Xbim.ModelGeometry.Scene/Xbim.ModelGeometry.Scene.csproj --no-build -c ${params.buildConfig} -o ${localPackageFolder} ${buildProps}"
    }
 
 	stage('Publish & archive') {
